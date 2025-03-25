@@ -1,0 +1,55 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.cm-editor {
+  border: 1px solid #7e7e7e;
+  background-color: #1e1e1e; /* Dark background */
+  color: #ffffff;
+  font-family: "Fira Code", monospace;
+  font-size: 14px;
+}
+
+.cm-gutters {
+  background: #282c34; /* Sidebar color */
+  color: #a24c4c; /* Line number color */
+  border-right: 1px solid #444;
+}
+
+.cm-activeLine {
+  background: rgba(255, 255, 255, 0.1) !important; /* Highlight active line */
+}
+
+.editor-container {
+  width: 40vw;
+  height: 40vw;
+  overflow: auto; /* Enable scrolling */
+  border: 1px solid #ccc; /* Optional: Add a border */
+  background: #1e1e1e; /* Optional: Dark background */
+  color: white;
+}
+
+/* Scrollbar styles */
+.editor-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-container::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.editor-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.editor-container::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.app-container {
+  position: relative;
+  top: -100px; /* Adjust this value as needed */
+}
