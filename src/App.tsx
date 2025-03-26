@@ -111,7 +111,7 @@ const App = () => {
     <div className="app-container">
       <div>
         <h2>
-          Volumetric Sandbox
+          Implicit Sandbox
         </h2>
       </div>
       <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
@@ -262,7 +262,7 @@ const App = () => {
           </div>
         </div>
       </div>
-      <div style={{width: "40%", gap: "20px" }}>
+      {/* <div style={{width: "40%", gap: "20px" }}>
           <h4>
             Welcome to Volumetric Sandbox!
           </h4>
@@ -272,7 +272,7 @@ const App = () => {
           <p>
             Made by gilsunshine.
           </p>
-        </div>
+        </div> */}
     </div>
   );
 };
