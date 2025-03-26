@@ -1,72 +1,57 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
-import { coolGlow } from "thememirror";
 import { autocompletion } from "@codemirror/autocomplete";
-import { executePythonCode } from "../utils/pyodideRunner";
+import { coolGlow } from "thememirror";
 
-interface CodeEditorProps {
-  code: string;
-  setCode: (code: string) => void;
-  setRawData: (data: Uint8Array) => void; // Callback to send data to ThreeCanvas
+export interface CodeEditorHandle {
+  getCode: () => string;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ code, setCode, setRawData }) => {
-  const [editor, setEditor] = useState<EditorView | null>(null);
-  const [error, setError] = useState<string | null>(null);
+interface CodeEditorProps {
+  initialCode: string;
+}
 
-  const editorParentRef = (parent: HTMLDivElement | null) => {
-    if (parent && !editor) {
-      const state = EditorState.create({
-        doc: code,
-        extensions: [
-          basicSetup,
-          python(),
-          autocompletion(),
-          coolGlow,
-          EditorView.lineWrapping,
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              setCode(update.state.doc.toString());
-            }
-          }),
-        ],
-      });
+const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
+  ({ initialCode }, ref) => {
+    const [editor, setEditor] = useState<EditorView | null>(null);
 
-      const view = new EditorView({ state, parent });
-      setEditor(view);
-    }
-  };
+    // Expose a method to get the current code in the editor
+    useImperativeHandle(ref, () => ({
+      getCode: () => (editor ? editor.state.doc.toString() : initialCode),
+    }));
 
-  // const runPythonCode = async () => {
-  //   try {
-  //     const rawData = await executePythonCode(code);
-  //     setRawData(rawData); // Send data to ThreeCanvas
-  //     setError(null); // Clear errors on success
-  //   } catch (err) {
-  //     setError("Error executing Python code. Check console for details.");
-  //     console.error(err);
-  //   }
-  // };
+    const editorParentRef = (parent: HTMLDivElement | null) => {
+      if (parent && !editor) {
+        const state = EditorState.create({
+          doc: initialCode,
+          extensions: [
+            basicSetup,
+            python(),
+            autocompletion(),
+            coolGlow,
+            EditorView.lineWrapping,
+            // Remove updateListener if you don't want state updates on every keystroke.
+          ],
+        });
+        const view = new EditorView({ state, parent });
+        setEditor(view);
+      }
+    };
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "50vh" }}>
+    return (
       <div
         ref={editorParentRef}
         className="editor-container"
         style={{
-          height: "100%",
+          height: "50vh",
           overflow: "auto",
           border: "1px solid #ccc",
         }}
       />
-      {/* <button onClick={runPythonCode} style={{ marginTop: "10px", padding: "8px", cursor: "pointer" }}>
-        Run Code
-      </button> */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </div>
-  );
-};
+    );
+  }
+);
 
 export default CodeEditor;

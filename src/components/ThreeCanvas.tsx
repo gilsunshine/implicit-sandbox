@@ -20,7 +20,7 @@ const dim = 256;
 const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
-  // Refs for scene objects
+  // Refs to hold scene objects so they aren't reinitialized on every update
   const sceneRef = useRef<Three.Scene | null>(null);
   const cameraRef = useRef<Three.PerspectiveCamera | null>(null);
   const rendererRef = useRef<Three.WebGLRenderer | null>(null);
@@ -28,46 +28,51 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
   const meshRef = useRef<Three.Mesh | null>(null);
   const clockRef = useRef<Three.Clock>(new Three.Clock());
   const uniformsRef = useRef<any>(null);
+  const volumeTextureRef = useRef<Three.Data3DTexture | null>(null);
 
   // Initialize the scene only once
   useEffect(() => {
-    if (!canvasRef.current || !rawData) {
-      console.log("Waiting for volumeData or canvasRef");
+    if (!canvasRef.current) {
+      console.log("Canvas not ready");
       return;
-    };
-
+    }
+    
+    // Use either the provided rawData or fallback dummy data (so scene initializes)
+    const initialData = rawData ? rawData : new Uint8Array(dim * dim * dim).fill(128);
+    
     const width = window.innerHeight / 2;
     const height = window.innerHeight / 2;
-
-    // Create renderer
-    const renderer = new Three.WebGLRenderer({ canvas: canvasRef.current });
+    
+    // Renderer
+    const renderer = new Three.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
     renderer.setSize(width, height);
     rendererRef.current = renderer;
-
-    // Create camera
+    
+    // Camera (we set it once so it won't reset on slider changes)
     const camera = new Three.PerspectiveCamera(5, width / height, 0.01, 1000);
-    camera.position.set(0, 0, -16);
+    camera.position.set(6, 6, 10);
     camera.lookAt(new Three.Vector3(0, 0, 0));
     cameraRef.current = camera;
-
-    // Create scene
+    
+    // Scene
     const scene = new Three.Scene();
     sceneRef.current = scene;
-
-    // Create orbit controls (which preserve camera state)
+    
+    // Controls (OrbitControls preserve camera state between updates)
     const controls = new OrbitControls(camera, renderer.domElement);
     controlsRef.current = controls;
-
-    // Create volume texture from rawData
-    const volumeDataTexture = new Three.Data3DTexture(rawData, dim, dim, dim);
+    
+    // Volume texture (store in a ref so it can be updated later)
+    const volumeDataTexture = new Three.Data3DTexture(initialData, dim, dim, dim);
     volumeDataTexture.format = Three.RedFormat;
     volumeDataTexture.minFilter = Three.LinearFilter;
     volumeDataTexture.magFilter = Three.LinearFilter;
     volumeDataTexture.wrapS = Three.RepeatWrapping;
     volumeDataTexture.wrapT = Three.RepeatWrapping;
     volumeDataTexture.needsUpdate = true;
-
-    // Create initial uniforms
+    volumeTextureRef.current = volumeDataTexture;
+    
+    // Create uniforms object (store in ref)
     const uniforms = {
       u_camera: { value: camera.position },
       u_resolution: { value: new Three.Vector3(width, height, 1) },
@@ -86,36 +91,37 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
       u_alphaVal: { value: uniformsOverrides.u_alphaVal },
     };
     uniformsRef.current = uniforms;
-
+    
     // Create a box mesh with shader material
     const geo1 = new Three.BoxGeometry(2);
     const mat1 = new Three.ShaderMaterial({
       uniforms: uniforms,
       transparent: true,
-      format: Three.RGBAFormat,
+      // Remove unsupported "format" property from ShaderMaterial
       vertexShader: vertexV2,
       fragmentShader: fragmentV2,
     });
     const mesh1 = new Three.Mesh(geo1, mat1);
-    // Initial rotation if desired
+    // Apply initial rotation
     mesh1.rotation.y = Math.PI / 2;
     meshRef.current = mesh1;
     scene.add(mesh1);
-
-    // Start animation loop
+    
+    // Start animation loop (only updates uniforms and renders, does not reinitialize scene)
+    const clock = new Three.Clock();
+    clockRef.current = clock;
     const animate = () => {
       controls.update();
-      // if (meshRef.current) {
-      //   meshRef.current.rotation.y += 0.001; // Continuous spinning
-      // }
-      uniforms.u_time.value = clockRef.current.getElapsedTime();
+      // (Optional) Mesh can spin continuously:
+      // mesh1.rotation.y += 0.01;
+      uniforms.u_time.value = clock.getElapsedTime();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
     animate();
-  }, []); // Run only once
-
-  // Update uniforms when slider values change without reinitializing the scene
+  }, []); // Run once
+  
+  // Update shader uniforms when slider values change (without reinitializing the scene)
   useEffect(() => {
     if (!uniformsRef.current) return;
     uniformsRef.current.u_dt.value = uniformsOverrides.u_dt;
@@ -128,7 +134,15 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
       uniformsOverrides.u_crossSectionSize.z
     );
   }, [uniformsOverrides]);
-
+  
+  // Update the volume texture if rawData changes (without reinitializing the scene)
+  useEffect(() => {
+    if (volumeTextureRef.current && rawData) {
+      volumeTextureRef.current.image.data = rawData;
+      volumeTextureRef.current.needsUpdate = true;
+    }
+  }, [rawData]);
+  
   return <canvas ref={canvasRef}></canvas>;
 };
 

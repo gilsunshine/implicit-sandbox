@@ -14,7 +14,6 @@ const initPyodide = async () => {
 
 export const executePythonCode = async (userCode: string): Promise<Uint8Array> => {
   const pyodide = await initPyodide();
-
   // Python script template to execute user-defined scalar_field function
   const script = `
 import numpy as np
@@ -43,7 +42,6 @@ values.tobytes()
   try {
     // Run the Python script in Pyodide
     const rawBytes = await pyodide.runPythonAsync(script);
-
     // Convert the returned bytes to a Uint8Array
     return new Uint8Array(rawBytes);
   } catch (error) {
