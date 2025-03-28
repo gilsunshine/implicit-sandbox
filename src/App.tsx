@@ -9,8 +9,12 @@ import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import * as THREE from "three";
 import { BounceLoader } from "react-spinners";
 import Split from 'react-split';
+import AboutPopup from "./components/AboutPopup";
+import ControlsPanel from "./components/ControlsPanel";
+
 
 import './App.css';
+import Draggable from "react-draggable";
 
 const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below!
 import numpy as np
@@ -78,7 +82,8 @@ const App = () => {
   const [u_isoValue, setUIsoValue] = useState(0);
   const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.5, y: 0.5, z: 0.5 });
   const [showControls, setShowControls] = useState(true);
-
+  const [showAbout, setShowAbout] = useState(false);
+  const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
 
    // Run the default code once on mount
    useEffect(() => {
@@ -203,12 +208,26 @@ const App = () => {
 
   return (
     <div className="app-container">
+      {showAbout && <AboutPopup onClose={() => setShowAbout(false)} />}
+
       <div className="header">
         <div className="header-left">
-          <h1 className="title">Implicit Surface Sandbox</h1>
-          <span className="about">about</span>
+          <h2 className="title">Fields</h2>
+          <span 
+            style={{ color: "#aaa", cursor: "pointer", fontSize: "14px" }} 
+            onClick={() => showAbout ? setShowAbout(false) : setShowAbout(true)}
+          >
+            About
+          </span>    
         </div>
-        <img src="/logo.svg" alt="Logo" className="logo" />
+        <div className="header-right">
+          <button 
+            style={{ background: "rgb(255, 77, 246)", color: "#000", cursor: "pointer", fontSize: "14px" }} 
+            onClick={() => showControls ? setShowControls(false) : setShowControls(true)}
+          >
+            Controls
+          </button>    
+        </div>      
       </div>
       <Split
         className="split-container"
@@ -232,10 +251,10 @@ const App = () => {
               style={{
                 padding: "8px 12px",
                 cursor: "pointer",
-                background: "rgb(225, 255, 0)",
+                background: "rgb(217, 255, 0)",
                 color: "#000",
                 borderRadius: "6px",
-                fontSize: "20px"
+                fontSize: "16px"
               }}
             >
               Evaluate Python
@@ -261,257 +280,23 @@ const App = () => {
           </div>
         )}
 
-        {!loading && (
-          <div style={{
-              position: "absolute",
-              bottom: "15px",
-              right: "20px",
-              zIndex: 10,
-            }}>
-              <button
-                onClick={handleSaveMesh}
-                style={{
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  background: "rgb(225, 255, 0)",
-                  color: "#000",
-                  borderRadius: "6px",
-                  fontSize: "20px"
-                }}
-              >
-                Save Mesh
-              </button>
-            </div>
-          )}
-
           {!loading && showControls && (
-            <div
-              className="control-panel"
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "rgba(42, 42, 42, 0.95)",
-                padding: "16px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                zIndex: 100,
-                maxWidth: "300px",
-                width: "fit-content",
-              }}
-            >
-              <button
-                onClick={() => setShowControls(false)}
-                style={{
-                  position: "absolute",
-                  top: "6px",
-                  right: "6px",
-                  background: "transparent",
-                  border: "none",
-                  fontSize: "18px",
-                  color: "#888",
-                  cursor: "pointer",
-                }}
-                title="Close"
-              >
-                ✕
-              </button>
-
-              <div style={{ marginBottom: "12px" }}>
-                <button
-                  onClick={() => setUColor(0)}
-                  style={{ marginRight: "8px", padding: "6px 12px", cursor: "pointer" }}
-                >
-                  Normal
-                </button>
-                <button
-                  onClick={() => setUColor(1)}
-                  style={{ padding: "6px 12px", cursor: "pointer" }}
-                >
-                  Phong
-                </button>
-              </div>
-
-              <div style={{ marginBottom: "12px" }}>
-                <label>
-                  <input
-                    type="radio"
-                    name="renderMode"
-                    value="volume"
-                    checked={renderMode === "volume"}
-                    onChange={() => setRenderMode("volume")}
-                  />
-                  Volume
-                </label>
-                <label style={{ marginLeft: "10px" }}>
-                  <input
-                    type="radio"
-                    name="renderMode"
-                    value="surface"
-                    checked={renderMode === "surface"}
-                    onChange={() => setRenderMode("surface")}
-                  />
-                  Surface
-                </label>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label>
-                  Step Size:
-                  <input
-                    type="range"
-                    min="0.001"
-                    max="0.016"
-                    step="0.002"
-                    value={u_dt}
-                    onChange={(e) => setUDt(parseFloat(e.target.value))}
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_dt}
-                  </span>
-                </label>
-
-                <label>
-                  Alpha:
-                  <input
-                    type="range"
-                    min="0.00"
-                    max="2.0"
-                    step="0.01"
-                    value={u_alphaVal}
-                    onChange={(e) => setUAlphaVal(parseFloat(e.target.value))}
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_alphaVal}
-                  </span>
-                </label>
-
-                <label>
-                  Iso Value:
-                  <input
-                    type="range"
-                    min="-1"
-                    max="1"
-                    step="0.01"
-                    value={u_isoValue}
-                    onChange={(e) => setUIsoValue(parseFloat(e.target.value))}
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_isoValue}
-                  </span>
-                </label>
-
-                <label>
-                  X Section:
-                  <input
-                    type="range"
-                    min="0.02"
-                    max="0.5"
-                    step="0.02"
-                    value={u_crossSectionSize.x}
-                    onChange={(e) =>
-                      setUCrossSectionSize({
-                        ...u_crossSectionSize,
-                        x: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_crossSectionSize.x}
-                  </span>
-                </label>
-
-                <label>
-                  Y Section:
-                  <input
-                    type="range"
-                    min="0.02"
-                    max="0.5"
-                    step="0.02"
-                    value={u_crossSectionSize.y}
-                    onChange={(e) =>
-                      setUCrossSectionSize({
-                        ...u_crossSectionSize,
-                        y: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_crossSectionSize.y}
-                  </span>
-                </label>
-
-                <label>
-                  Z Section:
-                  <input
-                    type="range"
-                    min="0.02"
-                    max="0.5"
-                    step="0.02"
-                    value={u_crossSectionSize.z}
-                    onChange={(e) =>
-                      setUCrossSectionSize({
-                        ...u_crossSectionSize,
-                        z: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                  <span style={{ 
-                    display: "inline-block", 
-                    width: "3ch", 
-                    textAlign: "right", 
-                    fontFamily: "monospace" 
-                  }}>
-                    {u_crossSectionSize.z}
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {!showControls && (
-            <button
-              onClick={() => setShowControls(true)}
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "rgba(30,30,30,0.85)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "8px 12px",
-                cursor: "pointer",
-                zIndex: 10,
-              }}
-            >
-              ⚙ Controls
-            </button>
+            <ControlsPanel
+              u_dt={u_dt}
+              setUDt={setUDt}
+              u_color={u_color}
+              setUColor={setUColor}
+              u_alphaVal={u_alphaVal}
+              setUAlphaVal={setUAlphaVal}
+              u_isoValue={u_isoValue}
+              setUIsoValue={setUIsoValue}
+              u_crossSectionSize={u_crossSectionSize}
+              setUCrossSectionSize={setUCrossSectionSize}
+              renderMode={renderMode}
+              setRenderMode={setRenderMode}
+              handleSaveMesh={handleSaveMesh}
+              onClose={() => setShowControls(false)}
+            />
           )}
 
         </div>

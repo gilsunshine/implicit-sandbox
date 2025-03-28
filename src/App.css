@@ -12,11 +12,35 @@ body, html {
   overflow: hidden;
 }
 
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3, .cm-s-default .cm-type {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-s-default .cm-error {color: #f00;}
+
 .cm-editor {
-  border: 1px solid #7e7e7e;
+  /* border: 1px solid #7e7e7e; */
   background-color: #1e1e1e; /* Dark background */
   color: #ffffff;
-  font-family: "Fira Code", monospace;
+  font-family: "Fragment Mono", monospace;
   font-size: 14px;
 }
 
@@ -29,6 +53,28 @@ body, html {
 .cm-activeLine {
   background: rgba(255, 255, 255, 0.1) !important; /* Highlight active line */
 }
+
+.cm-diagnostic {
+  border-bottom: 1px dotted red;
+}
+
+.cm-lintPoint {
+  position: absolute;
+  border-bottom: 2px solid red;
+  width: 100%;
+}
+
+.cm-tooltip-lint {
+  background-color: #1e1e1e;
+  color: #fff;
+  /* border: 1px solid #555; */
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  max-width: 400px;
+  z-index: 20;
+}
+
 
 /* Scrollbar styles */
 .editor-container::-webkit-scrollbar {
@@ -52,6 +98,7 @@ body, html {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  font-family: "Fragment Mono", monospace;
 }
 
 .split-container {
@@ -96,7 +143,7 @@ body, html {
   background: #1e1e1e;
   border-bottom: 1px solid #333;
   color: white;
-  font-family: "Fira Code", monospace;
+  font-family: "Fragment Mono", monospace;
 }
 
 .header-left {
@@ -123,6 +170,6 @@ body, html {
   filter: brightness(1.1);
 }
 
-.controls-overlay {
+.control-panel {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }

@@ -88,7 +88,7 @@ void main(){
                     pos.y<texBoxMin.y+epsilon||pos.y>texBoxMax.y-epsilon||
                 pos.z<texBoxMin.z+epsilon||pos.z>texBoxMax.z-epsilon){
                     // Render a single color (red) if at the boundary.
-                    color=vec4(0.,1.,.8157,1.);
+                    color=vec4(.85,1.,0.,1.);
                     break;
                 }
                 
