@@ -27,17 +27,18 @@ grid = np.linspace(0, 1, resolution)
 X, Y, Z = np.meshgrid(grid, grid, grid, indexing="ij")
 
 # Step 3: Compute scalar field values
-values = scalar_field(X, Y, Z)
+values = scalar_field(X, Y, Z).astype(np.uint8)
 
 # Step 4: Normalize to uint8
+values = values.astype(np.float32)
 values -= values.min()
 values /= values.max()
 values *= 255
-values = values.astype(np.uint8)
+values = np.clip(values, 0, 255).astype(np.uint8)
 
 # Convert to bytes for JavaScript
 values.tobytes()
-`;
+  `;
 
   try {
     // Run the Python script in Pyodide

@@ -1,20 +1,5 @@
 import * as THREE from 'three';
 
-/**
- * Generates a THREE.Geometry representing the isosurface for a scalar field.
- * The scalar field is computed using a simple function: x*x + y*y - z*z - 25.
- * 
- * @param size - The grid resolution (number of points per dimension)
- * @param axisMin - The minimum coordinate value on all axes
- * @param axisRange - The range of the coordinate values
- * @returns A THREE.Geometry with vertices, faces, and faceVertexUvs computed via Marching Cubes.
- */
-export function generateMeshFromScalarField(
-  rawData: Uint8Array,
-  size: number,
-): THREE.BufferGeometry {
-
-
   const edgeTable = new Int32Array([
     0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
     0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
@@ -307,37 +292,55 @@ export function generateMeshFromScalarField(
     0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]);
 
+ /**
+ * Generates an indexed THREE.BufferGeometry representing an isosurface from a scalar field
+ * using a marching cubes algorithm.
+ *
+ * @param rawData - A Uint8Array of scalar values (length should be resolution³).
+ * @param resolution - The number of grid points per dimension.
+ * @param scale - The size of the grid in world units.
+ * @returns A THREE.BufferGeometry built from the computed triangles.
+ */
+export function generateMeshFromScalarField(
+  rawData: Uint8Array,
+  resolution: number,
+  scale: number,
+  isolevel: number,
+): THREE.BufferGeometry {
+  // Create grid points and scalar values arrays.
+  const totalPoints = resolution * resolution * resolution;
   const points: THREE.Vector3[] = [];
   const values: number[] = [];
   
-  // // Generate grid points and compute scalar field values.
-  // for (let k = 0; k < size; k++) {
-  //   for (let j = 0; j < size; j++) {
-  //     for (let i = 0; i < size; i++) {
-  //       const x = axisMin + (axisRange * i) / (size - 1);
-  //       const y = axisMin + (axisRange * j) / (size - 1);
-  //       const z = axisMin + (axisRange * k) / (size - 1);
-  //       points.push(new THREE.Vector3(x, y, z));
-  //       // Example scalar field function:
-  //       const value = x * x + y * y - z * z - 25;
-  //       values.push(value);
-  //     }
-  //   }
-  // }
+  for (let z = 0; z < resolution; z++) {
+    for (let y = 0; y < resolution; y++) {
+      for (let x = 0; x < resolution; x++) {
+        const index = x + y * resolution + z * resolution * resolution;
+        // Map grid coordinates to [0, scale]
+        const posX = (x / (resolution - 1)) * scale;
+        const posY = (y / (resolution - 1)) * scale;
+        const posZ = (z / (resolution - 1)) * scale;
+        points.push(new THREE.Vector3(posX, posY, posZ));
+        values.push(rawData[index]);
+      }
+    }
+  }
   
-  const geometry = new THREE.BufferGeometry();
   let vertexIndex = 0;
-  const size2 = size * size;
-  // vlist will hold up to 12 interpolated vertices along the cube's edges.
+  const size2 = resolution * resolution;
+  const allVertices: number[] = [];
+  const allIndices: number[] = [];
+  
+  // vlist will hold up to 12 interpolated vertices along cube edges.
   const vlist: THREE.Vector3[] = new Array(12);
-
-  // Loop over each cube in the grid
-  for (let z = 0; z < size - 1; z++) {
-    for (let y = 0; y < size - 1; y++) {
-      for (let x = 0; x < size - 1; x++) {
-        const p = x + size * y + size2 * z;
+  
+  // Loop over each cube in the grid.
+  for (let z = 0; z < resolution - 1; z++) {
+    for (let y = 0; y < resolution - 1; y++) {
+      for (let x = 0; x < resolution - 1; x++) {
+        const p = x + resolution * y + size2 * z;
         const px = p + 1;
-        const py = p + size;
+        const py = p + resolution;
         const pxy = py + 1;
         const pz = p + size2;
         const pxz = px + size2;
@@ -353,9 +356,6 @@ export function generateMeshFromScalarField(
         const value6 = values[pyz];
         const value7 = values[pxyz];
         
-        const isolevel = 0; // Change this if needed
-        
-        // Determine the cube index
         let cubeindex = 0;
         if (value0 < isolevel) cubeindex |= 1;
         if (value1 < isolevel) cubeindex |= 2;
@@ -366,7 +366,6 @@ export function generateMeshFromScalarField(
         if (value6 < isolevel) cubeindex |= 128;
         if (value7 < isolevel) cubeindex |= 64;
         
-        // Look up edges intersected by the isosurface.
         const bits = edgeTable[cubeindex];
         if (bits === 0) continue;
         
@@ -420,38 +419,34 @@ export function generateMeshFromScalarField(
           vlist[11] = points[py].clone().lerp(points[pyz], mu);
         }
         
-        // Shift cubeindex to use as an offset into triTable.
-        cubeindex <<= 4;
+        // Calculate offset into triTable.
+        const offset = cubeindex << 4; // cubeindex * 16
         let i = 0;
-        while (triTable[cubeindex + i] !== -1) {
-          const index1 = triTable[cubeindex + i];
-          const index2 = triTable[cubeindex + i + 1];
-          const index3 = triTable[cubeindex + i + 2];
+        while (triTable[offset + i] !== -1) {
+          const a = triTable[offset + i];
+          const b = triTable[offset + i + 1];
+          const c = triTable[offset + i + 2];
           
-          const vertices = new Float32Array( [
-            vlist[index1].clone().x, vlist[index1].clone().y, vlist[index1].clone().z,
-            vlist[index2].clone().x, vlist[index2].clone().y, vlist[index2].clone().z,
-            vlist[index3].clone().x, vlist[index3].clone().y, vlist[index3].clone().z,
-
-          ] );
-
-          const indices = [
-            vertexIndex, vertexIndex + 1, vertexIndex + 2
-          ];
+          const va = vlist[a];
+          const vb = vlist[b];
+          const vc = vlist[c];
           
-          const normals = [0, 0, 1];
+          allVertices.push(va.x, va.y, va.z);
+          allVertices.push(vb.x, vb.y, vb.z);
+          allVertices.push(vc.x, vc.y, vc.z);
           
-          // itemSize = 3 because there are 3 values (components) per vertex
-          geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-          geometry.setIndex( indices );
-          geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-
-          
+          allIndices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2);
           vertexIndex += 3;
           i += 3;
         }
       }
     }
   }
-  return geometry;
+  
+  const bufferGeometry = new THREE.BufferGeometry();
+  bufferGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allVertices), 3));
+  bufferGeometry.setIndex(allIndices);
+  bufferGeometry.computeVertexNormals();
+  
+  return bufferGeometry;
 }

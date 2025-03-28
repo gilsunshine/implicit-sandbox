@@ -12,13 +12,18 @@ interface ThreeCanvasProps {
     u_alphaVal: number;
     u_isoValue: number;
     u_crossSectionSize: { x: number; y: number; z: number };
+    u_renderMode: number;
   };
 }
 
 const dim = 256;
 
-const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
+const ThreeCanvas = ({
+  rawData,
+  uniformsOverrides,
+}: ThreeCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  
   
   // Refs to hold scene objects so they aren't reinitialized on every update
   const sceneRef = useRef<Three.Scene | null>(null);
@@ -40,17 +45,17 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
     // Use either the provided rawData or fallback dummy data (so scene initializes)
     const initialData = rawData ? rawData : new Uint8Array(dim * dim * dim).fill(128);
     
-    const width = window.innerHeight / 2;
-    const height = window.innerHeight / 2;
-    
+    const width = canvasRef.current.clientWidth;
+    const height = canvasRef.current.clientHeight;
+      
     // Renderer
-    const renderer = new Three.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+    const renderer = new Three.WebGLRenderer({ canvas: canvasRef.current, antialias: true, preserveDrawingBuffer: true, });
     renderer.setSize(width, height);
     rendererRef.current = renderer;
     
     // Camera (we set it once so it won't reset on slider changes)
     const camera = new Three.PerspectiveCamera(5, width / height, 0.01, 1000);
-    camera.position.set(6, 6, 10);
+    camera.position.set(10, 10, 16);
     camera.lookAt(new Three.Vector3(0, 0, 0));
     cameraRef.current = camera;
     
@@ -88,6 +93,7 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
       u_color: { value: uniformsOverrides.u_color },
       u_volume: { value: volumeDataTexture },
       u_isoValue: { value: uniformsOverrides.u_isoValue },
+      u_renderMode: { value: uniformsOverrides.u_renderMode },
       u_alphaVal: { value: uniformsOverrides.u_alphaVal },
     };
     uniformsRef.current = uniforms;
@@ -128,6 +134,7 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
     uniformsRef.current.u_color.value = uniformsOverrides.u_color;
     uniformsRef.current.u_alphaVal.value = uniformsOverrides.u_alphaVal;
     uniformsRef.current.u_isoValue.value = uniformsOverrides.u_isoValue;
+    uniformsRef.current.u_renderMode.value = uniformsOverrides.u_renderMode;
     uniformsRef.current.u_crossSectionSize.value.set(
       uniformsOverrides.u_crossSectionSize.x,
       uniformsOverrides.u_crossSectionSize.y,
@@ -143,7 +150,59 @@ const ThreeCanvas = ({ rawData, uniformsOverrides }: ThreeCanvasProps) => {
     }
   }, [rawData]);
   
-  return <canvas ref={canvasRef}></canvas>;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = canvasRef.current?.parentElement;
+    const renderer = rendererRef.current;
+    const camera = cameraRef.current;
+    const scene = sceneRef.current;
+  
+    if (!container || !renderer || !camera || !scene) return;
+  
+    const observer = new ResizeObserver(() => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+  
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(window.devicePixelRatio);
+  
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+  
+      if (uniformsRef.current) {
+        uniformsRef.current.u_resolution.value.set(width, height, 1);
+      }
+  
+      renderer.render(scene, camera);
+    });
+  
+    observer.observe(container);
+  
+    return () => observer.disconnect();
+  }, []);
+  
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "block",
+        }}
+      />
+    </div>
+  );
+
 };
 
 export default ThreeCanvas;

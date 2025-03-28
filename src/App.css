@@ -1,7 +1,15 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .cm-editor {
@@ -20,15 +28,6 @@
 
 .cm-activeLine {
   background: rgba(255, 255, 255, 0.1) !important; /* Highlight active line */
-}
-
-.editor-container {
-  width: 40vw;
-  height: 40vw;
-  overflow: auto; /* Enable scrolling */
-  border: 1px solid #ccc; /* Optional: Add a border */
-  background: #1e1e1e; /* Optional: Dark background */
-  color: white;
 }
 
 /* Scrollbar styles */
@@ -50,6 +49,80 @@
 }
 
 .app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-container {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  width: 100vw; /* Ensure it spans the full viewport width */
+  overflow: hidden;
+}
+
+.canvas-panel {
+  flex: 1 1 auto; /* Allow flexible resizing */
+  min-width: 0; /* Prevent min-width from stopping resizing */
+  height: 100%;
   position: relative;
-  top: -120px; /* Adjust this value as needed */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-panel {
+  background: #1e1e1e;
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Optional: draggable gutter style */
+.gutter {
+  background-color: #444;
+  cursor: col-resize;
+  width: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+  color: white;
+  font-family: "Fira Code", monospace;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.about {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.logo {
+  height: 28px;
+  width: auto;
+  filter: brightness(1.1);
+}
+
+.controls-overlay {
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }

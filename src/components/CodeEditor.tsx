@@ -21,6 +21,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
     useImperativeHandle(ref, () => ({
       getCode: () => (editor ? editor.state.doc.toString() : initialCode),
     }));
+    
 
     const editorParentRef = (parent: HTMLDivElement | null) => {
       if (parent && !editor) {
@@ -45,7 +46,6 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         ref={editorParentRef}
         className="editor-container"
         style={{
-          height: "50vh",
           overflow: "auto",
           border: "1px solid #ccc",
         }}
