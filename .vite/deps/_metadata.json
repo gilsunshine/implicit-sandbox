@@ -1,0 +1,136 @@
+{
+  "hash": "aaed24c2",
+  "configHash": "34f57f96",
+  "lockfileHash": "fa21da52",
+  "browserHash": "4cb9518d",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "3b653489",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "c033367d",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "c6bcde7c",
+      "needsInterop": true
+    },
+    "codemirror": {
+      "src": "../../node_modules/codemirror/dist/index.js",
+      "file": "codemirror.js",
+      "fileHash": "3eb8f956",
+      "needsInterop": false
+    },
+    "@codemirror/state": {
+      "src": "../../node_modules/@codemirror/state/dist/index.js",
+      "file": "@codemirror_state.js",
+      "fileHash": "a08c4119",
+      "needsInterop": false
+    },
+    "@codemirror/lang-python": {
+      "src": "../../node_modules/@codemirror/lang-python/dist/index.js",
+      "file": "@codemirror_lang-python.js",
+      "fileHash": "8e7cc38f",
+      "needsInterop": false
+    },
+    "thememirror": {
+      "src": "../../node_modules/thememirror/dist/index.js",
+      "file": "thememirror.js",
+      "fileHash": "3d4d03f2",
+      "needsInterop": false
+    },
+    "@codemirror/autocomplete": {
+      "src": "../../node_modules/@codemirror/autocomplete/dist/index.js",
+      "file": "@codemirror_autocomplete.js",
+      "fileHash": "be29f677",
+      "needsInterop": false
+    },
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "983953b9",
+      "needsInterop": false
+    },
+    "three/examples/jsm/Addons.js": {
+      "src": "../../node_modules/three/examples/jsm/Addons.js",
+      "file": "three_examples_jsm_Addons__js.js",
+      "fileHash": "e94d5976",
+      "needsInterop": false
+    },
+    "pyodide": {
+      "src": "../../node_modules/pyodide/pyodide.mjs",
+      "file": "pyodide.js",
+      "fileHash": "80911cdf",
+      "needsInterop": false
+    },
+    "three/examples/jsm/exporters/STLExporter.js": {
+      "src": "../../node_modules/three/examples/jsm/exporters/STLExporter.js",
+      "file": "three_examples_jsm_exporters_STLExporter__js.js",
+      "fileHash": "a2bf477d",
+      "needsInterop": false
+    },
+    "three/examples/jsm/objects/MarchingCubes.js": {
+      "src": "../../node_modules/three/examples/jsm/objects/MarchingCubes.js",
+      "file": "three_examples_jsm_objects_MarchingCubes__js.js",
+      "fileHash": "ed612ae5",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "node_vm-FXJD5GQ3": {
+      "file": "node_vm-FXJD5GQ3.js"
+    },
+    "node_path-OEDGKJ4G": {
+      "file": "node_path-OEDGKJ4G.js"
+    },
+    "node_crypto-IPC7JOUS": {
+      "file": "node_crypto-IPC7JOUS.js"
+    },
+    "ws-RZIMPEVM": {
+      "file": "ws-RZIMPEVM.js"
+    },
+    "node_child_process-MMIYW5JQ": {
+      "file": "node_child_process-MMIYW5JQ.js"
+    },
+    "node_url-A5KZKFHP": {
+      "file": "node_url-A5KZKFHP.js"
+    },
+    "node_fs-ZJ3JENY5": {
+      "file": "node_fs-ZJ3JENY5.js"
+    },
+    "promises-YVRXQUPS": {
+      "file": "promises-YVRXQUPS.js"
+    },
+    "chunk-PPBTX5EY": {
+      "file": "chunk-PPBTX5EY.js"
+    },
+    "chunk-XM6KJDFG": {
+      "file": "chunk-XM6KJDFG.js"
+    },
+    "chunk-VCVPXQVX": {
+      "file": "chunk-VCVPXQVX.js"
+    },
+    "chunk-5EHUQYFR": {
+      "file": "chunk-5EHUQYFR.js"
+    },
+    "chunk-DYW2Y52M": {
+      "file": "chunk-DYW2Y52M.js"
+    },
+    "chunk-3QKNMDS5": {
+      "file": "chunk-3QKNMDS5.js"
+    },
+    "chunk-BPUUWGGA": {
+      "file": "chunk-BPUUWGGA.js"
+    },
+    "chunk-5FUTL2UF": {
+      "file": "chunk-5FUTL2UF.js"
+    }
+  }
+}
