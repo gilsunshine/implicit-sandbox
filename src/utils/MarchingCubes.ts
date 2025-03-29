@@ -308,7 +308,7 @@ export function generateMeshFromScalarField(
   isolevel: number,
 ): THREE.BufferGeometry {
   // Create grid points and scalar values arrays.
-  const totalPoints = resolution * resolution * resolution;
+  // const totalPoints = resolution * resolution * resolution;
   const points: THREE.Vector3[] = [];
   const values: number[] = [];
   

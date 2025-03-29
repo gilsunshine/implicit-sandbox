@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import CodeEditor, { CodeEditorHandle } from "./components/CodeEditor";
 import ThreeCanvas from './components/ThreeCanvas';
 import { executePythonCode } from "./utils/pyodideRunner";
@@ -11,10 +11,12 @@ import { BounceLoader } from "react-spinners";
 import Split from 'react-split';
 import AboutPopup from "./components/AboutPopup";
 import ControlsPanel from "./components/ControlsPanel";
+import PythonConsole from "./components/PythonConsole";
+
 
 
 import './App.css';
-import Draggable from "react-draggable";
+// import Draggable from "react-draggable";
 
 const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below!
 import numpy as np
@@ -63,16 +65,18 @@ def scalar_field(x, y, z):
     return sdf.astype(np.uint8)`;
 
 const App = () => {
-  const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON_CODE);
+  // const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON_CODE);
   const [rawData, setRawData] = useState<Uint8Array | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [renderMode, setRenderMode] = useState<"surface" | "volume">("volume");
+  const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
 
 
   // Create a ref for the CodeEditor
   const editorRef = useRef<CodeEditorHandle>(null);
   const canvasRef = useRef<{ resize: () => void } | null>(null);
+  const aboutButtonRef = useRef<HTMLSpanElement>(null);
 
 
   // Slider controls state
@@ -83,7 +87,7 @@ const App = () => {
   const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.5, y: 0.5, z: 0.5 });
   const [showControls, setShowControls] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
-  const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
+  // const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
 
    // Run the default code once on mount
    useEffect(() => {
@@ -107,6 +111,10 @@ const App = () => {
   }, [renderMode]);
 
   useEffect(() => {
+    console.log("Error:", error);
+  }, [error]);
+
+  useEffect(() => {
     const onWindowResize = () => canvasRef.current?.resize();
     window.addEventListener("resize", onWindowResize);
     return () => window.removeEventListener("resize", onWindowResize);
@@ -117,16 +125,19 @@ const App = () => {
     if (editorRef.current) {
       const code = editorRef.current.getCode();
       console.log("Evaluating code...");
-      setLoading(true); // ✅ Start loading
+      setLoading(true);
+      setError(null);
+      setConsoleLogs([]); // Clear previous logs
   
       try {
         const result = await executePythonCode(code);
         setRawData(result);
-      } catch (error) {
-        console.error("Error executing Python code:", error);
+      } catch (error: any) {
+        const message = error.message || "Unknown error";
         setError("There was an error running your Python code.");
+        setConsoleLogs([message]);
       } finally {
-        setLoading(false); // ✅ Stop loading no matter what
+        setLoading(false);
       }
     }
   }, []);
@@ -163,7 +174,7 @@ const App = () => {
       const blob = new Blob([stlString], { type: "text/plain" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "mesh.stl";
+      link.download = "mesh_" + Date.now() + ".stl";
       link.click();
     } else {
       // Small enough: export directly
@@ -182,7 +193,8 @@ const App = () => {
   
   // Combine uniform overrides in an object that is memoized if needed
   const uniformsOverrides = { 
-    u_dt, u_color, 
+    u_dt, 
+    u_color, 
     u_alphaVal, 
     u_isoValue, 
     u_crossSectionSize, 
@@ -208,15 +220,16 @@ const App = () => {
 
   return (
     <div className="app-container">
-      {showAbout && <AboutPopup onClose={() => setShowAbout(false)} />}
+    {showAbout && <AboutPopup onClose={() => setShowAbout(false)} aboutButtonRef={aboutButtonRef} />}
 
       <div className="header">
         <div className="header-left">
           <h2 className="title">Fields</h2>
           <span 
             style={{ color: "#aaa", cursor: "pointer", fontSize: "14px" }} 
-            onClick={() => showAbout ? setShowAbout(false) : setShowAbout(true)}
-          >
+            ref={aboutButtonRef}
+            onClick={() => setShowAbout((prev) => !prev)}
+             >
             About
           </span>    
         </div>
@@ -240,26 +253,16 @@ const App = () => {
         <div className="editor-panel">
           <CodeEditor initialCode={DEFAULT_PYTHON_CODE} ref={editorRef} />
 
-          <div style={{
-            position: "absolute",
-            bottom: "15px",
-            right: "20px",
-            zIndex: 10,
-          }}>
+          <div className="console-button-wrapper">
             <button
+            className="evaluate-btn"
               onClick={handleRunCode}
-              style={{
-                padding: "8px 12px",
-                cursor: "pointer",
-                background: "rgb(217, 255, 0)",
-                color: "#000",
-                borderRadius: "6px",
-                fontSize: "16px"
-              }}
             >
               Evaluate Python
             </button>
           </div>
+          <PythonConsole logs={consoleLogs} />
+
         </div>
 
       {/* RIGHT: Canvas + controls */}

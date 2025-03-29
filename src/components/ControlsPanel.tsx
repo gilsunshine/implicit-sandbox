@@ -99,6 +99,8 @@ const ControlsPanel: React.FC<Props> = ({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <Slider label="Step Size" value={u_color} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
+
         <Slider label="Step Size" value={u_dt} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
         <Slider label="Alpha" value={u_alphaVal} setValue={setUAlphaVal} min={0.00} max={2.0} step={0.01} />
         <Slider label="Iso Value" value={u_isoValue} setValue={setUIsoValue} min={-1} max={1} step={0.01} />
@@ -142,6 +144,7 @@ type SliderProps = {
           <input
             type="range"
             className="custom-slider"
+
             value={value}
             min={min}
             max={max}

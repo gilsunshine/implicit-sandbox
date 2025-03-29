@@ -1,14 +1,36 @@
-import React from "react";
+import React, { useEffect, useRef } from 'react';
 import "../styling/AboutPopup.css"; // Optional: for styles
 
-interface AboutProps {
-  onClose: () => void;
-}
+type Props = {
+    onClose: () => void;
+    aboutButtonRef: React.RefObject<HTMLElement | null>;
+  };
 
-const AboutPopup: React.FC<AboutProps> = ({ onClose }) => {
+const AboutPopup: React.FC<Props> = ({ onClose, aboutButtonRef }) => {
+    const popupRef = useRef<HTMLDivElement>(null);
+  
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+          const target = event.target as Node;
+    
+          if (
+            popupRef.current &&
+            !popupRef.current.contains(target) &&
+            aboutButtonRef.current &&
+            !aboutButtonRef.current.contains(target)
+          ) {
+            onClose();
+          }
+        };
+    
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }, [onClose, aboutButtonRef]);
+  
   return (
-    <div className="about-overlay">
+    <div ref={popupRef} className="about-overlay">
       <div className="about-popup">
+
         {/* <button className="about-close" onClick={onClose}>✕</button> */}
         <p>
           Fields is a volumetric modeling sandbox that uses Python-defined scalar fields and GPU-powered raymarching for real-time rendering.
