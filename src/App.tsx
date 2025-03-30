@@ -18,7 +18,10 @@ import PythonConsole from "./components/PythonConsole";
 import './App.css';
 import Draggable from "react-draggable";
 
-const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below!
+const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below.
+# You can find example functions here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
+# Project in development! Updates and improvements forthcoming.
+
 import numpy as np
 
 # SDF: Sphere
