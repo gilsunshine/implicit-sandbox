@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import CodeEditor, { CodeEditorHandle } from "./components/CodeEditor";
 import ThreeCanvas from './components/ThreeCanvas';
 import { lintPythonCode, executePythonCode } from "./utils/pyodideRunner";
@@ -12,11 +12,7 @@ import Split from 'react-split';
 import AboutPopup from "./components/AboutPopup";
 import ControlsPanel from "./components/ControlsPanel";
 import PythonConsole from "./components/PythonConsole";
-
-
-
 import './App.css';
-import Draggable from "react-draggable";
 
 const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below.
 # You can find example functions here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
@@ -55,13 +51,11 @@ def scalar_field(x, y, z):
 `;
 
 const App = () => {
-  const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON_CODE);
   const [rawData, setRawData] = useState<Float32Array | null>(null);
   const [loading, setLoading] = useState(true);
   const [pythonError, setPythonError] = useState<string[]>([]);
   const [renderMode, setRenderMode] = useState<"surface" | "volume">("volume");
-  const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
-  const [consolePos, setConsolePos] = useState({ top: 0, left: 0 });
+  // const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
   const [editorWidth, setEditorWidth] = useState(0);
 
   // Create a ref for the CodeEditor
@@ -82,7 +76,6 @@ const App = () => {
   const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.0, y: 0.0, z: 0.0 });
   const [showControls, setShowControls] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
 
    // Run the default code once on mount
    useEffect(() => {
@@ -137,7 +130,7 @@ const App = () => {
       console.log("Linting and evaluating code...");
       setLoading(true);
       setPythonError([]);
-      setConsoleLogs([]);
+      // setConsoleLogs([]);
   
       // First, lint the code
       const lintResults = await lintPythonCode(code);
