@@ -24,7 +24,6 @@ const ThreeCanvas = ({
 }: ThreeCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
-  
   // Refs to hold scene objects so they aren't reinitialized on every update
   const sceneRef = useRef<Three.Scene | null>(null);
   const cameraRef = useRef<Three.PerspectiveCamera | null>(null);
@@ -78,8 +77,8 @@ const ThreeCanvas = ({
     volumeDataTexture.magFilter = Three.LinearFilter;
     volumeDataTexture.wrapS = Three.RepeatWrapping;
     volumeDataTexture.wrapT = Three.RepeatWrapping;
-    volumeDataTexture.type = Three.FloatType; // ✅ Accepts Float32Array
-    volumeDataTexture.internalFormat = 'R32F'; // WebGL2 only
+    volumeDataTexture.type = Three.FloatType; 
+    volumeDataTexture.internalFormat = 'R32F';
     volumeDataTexture.needsUpdate = true;
     volumeTextureRef.current = volumeDataTexture;
     
@@ -109,7 +108,6 @@ const ThreeCanvas = ({
     const mat1 = new Three.ShaderMaterial({
       uniforms: uniforms,
       transparent: true,
-      // Remove unsupported "format" property from ShaderMaterial
       vertexShader: vertexV2,
       fragmentShader: fragmentV2,
     });
@@ -124,14 +122,11 @@ const ThreeCanvas = ({
     clockRef.current = clock;
     const animate = () => {
       controls.update();
-      // (Optional) Mesh can spin continuously:
-      // mesh1.rotation.y += 0.01;
-      // uniforms.u_time.value = clock.getElapsedTime();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
     animate();
-  }, []); // Run once
+  }, []); 
   
   // Update shader uniforms when slider values change (without reinitializing the scene)
   useEffect(() => {

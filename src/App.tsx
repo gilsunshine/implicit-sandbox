@@ -84,7 +84,7 @@ const App = () => {
         const code = editorRef.current.getCode();
         try {
           const result = await executePythonCode(code);
-          console.log("✅ Generated data:", result.length);
+          console.log("Generated data:", result.length);
 
           setRawData(result);
         } catch (error) {
@@ -154,7 +154,7 @@ const App = () => {
   
       try {
         const result = await executePythonCode(code);
-        console.log("✅ Generated data:", result.length);
+        console.log("Generated data:", result.length);
 
         setRawData(result);
       } catch (err: any) {

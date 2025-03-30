@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useImperativeHandle, forwardRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { autocompletion } from "@codemirror/autocomplete";
-import { coolGlow } from "thememirror";
 import { linter, Diagnostic } from "@codemirror/lint";
 import {keymap} from "@codemirror/view"
 import {indentWithTab} from "@codemirror/commands"
-import { lintPythonCode } from "../utils/pyodideRunner"; // 🔥 Your async flake8 function
-import fieldsTheme from './fieldstheme'; // ← Import your theme
+import { lintPythonCode } from "../utils/pyodideRunner";
+import fieldsTheme from './fieldstheme';
 
 export interface CodeEditorHandle {
   getCode: () => string;
@@ -66,7 +65,6 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
         className="editor-container"
         style={{
           overflow: "auto",
-          // border: "1px solid #555",
         }}
       />
     );

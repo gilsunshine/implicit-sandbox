@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import "../styling/AboutPopup.css"; // Optional: for styles
-
+import "../styling/AboutPopup.css";
 type Props = {
     onClose: () => void;
     aboutButtonRef: React.RefObject<HTMLElement | null>;
@@ -30,8 +29,6 @@ const AboutPopup: React.FC<Props> = ({ onClose, aboutButtonRef }) => {
   return (
     <div ref={popupRef} className="about-overlay">
       <div className="about-popup">
-
-        {/* <button className="about-close" onClick={onClose}>✕</button> */}
         <p>
           Fields is a volumetric modeling sandbox that uses Python-defined scalar fields and GPU-powered raymarching for real-time rendering.
         </p>

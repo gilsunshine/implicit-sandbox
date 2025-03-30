@@ -1,7 +1,7 @@
 import {createTheme} from 'thememirror';
 import {tags as t} from '@lezer/highlight';
 
-// Author: unknown
+// Author: Gil Sunshine
 const fieldsTheme = createTheme({
 	variant: 'dark',
 	settings: {

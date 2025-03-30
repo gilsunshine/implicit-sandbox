@@ -1,7 +1,7 @@
 .python-console {
     position: absolute;
     bottom: 20px;
-    left: calc(33% + 20px); /* assumes editor takes 33% in split */
+    left: calc(33% + 20px); 
     width: 300px;
     background: #111;
     color: #f88;
