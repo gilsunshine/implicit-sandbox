@@ -1,25 +1,25 @@
 .python-console {
     position: absolute;
-    bottom: 0;
-    right: calc(100% + 10px); /* 10px to the left of the button */
+    bottom: 20px;
+    left: calc(33% + 20px); /* assumes editor takes 33% in split */
     width: 300px;
     background: #111;
     color: #f88;
     font-family: monospace;
-    font-size: 12px;
+    font-size: 13px;
     padding: 10px;
     border: 1px solid #333;
     border-radius: 6px;
     z-index: 1000;
     overflow: auto;
-    max-height: 200px;
+    max-height: 150px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
   }
-  
+
   .python-console-logs {
     margin-top: 6px;
     max-height: 150px;
-    overflow-y: auto;
+    overflow: auto;
   }
   
   .python-console-line {

@@ -5,7 +5,7 @@ import vertexV2 from '../shaders/vertex.glsl?raw';
 import fragmentV2 from '../shaders/fragment.glsl?raw';
 
 interface ThreeCanvasProps {
-  rawData: Uint8Array | null;
+  rawData: Float32Array | null;
   uniformsOverrides: {
     u_dt: number;
     u_color: number;
@@ -43,7 +43,11 @@ const ThreeCanvas = ({
     }
     
     // Use either the provided rawData or fallback dummy data (so scene initializes)
-    const initialData = rawData ? rawData : new Uint8Array(dim * dim * dim).fill(128);
+    if (rawData && rawData.length !== dim * dim * dim) {
+      console.warn("⚠️ rawData length mismatch", rawData.length);
+    }
+
+    const initialData = rawData ? rawData : new Float32Array(dim * dim * dim).fill(128);
     
     const width = canvasRef.current.clientWidth;
     const height = canvasRef.current.clientHeight;
@@ -74,6 +78,8 @@ const ThreeCanvas = ({
     volumeDataTexture.magFilter = Three.LinearFilter;
     volumeDataTexture.wrapS = Three.RepeatWrapping;
     volumeDataTexture.wrapT = Three.RepeatWrapping;
+    volumeDataTexture.type = Three.FloatType; // ✅ Accepts Float32Array
+    volumeDataTexture.internalFormat = 'R32F'; // WebGL2 only
     volumeDataTexture.needsUpdate = true;
     volumeTextureRef.current = volumeDataTexture;
     
@@ -120,7 +126,7 @@ const ThreeCanvas = ({
       controls.update();
       // (Optional) Mesh can spin continuously:
       // mesh1.rotation.y += 0.01;
-      uniforms.u_time.value = clock.getElapsedTime();
+      // uniforms.u_time.value = clock.getElapsedTime();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     };
@@ -144,11 +150,27 @@ const ThreeCanvas = ({
   
   // Update the volume texture if rawData changes (without reinitializing the scene)
   useEffect(() => {
-    if (volumeTextureRef.current && rawData) {
-      volumeTextureRef.current.image.data = rawData;
-      volumeTextureRef.current.needsUpdate = true;
+    if (!rawData || !volumeTextureRef.current || !uniformsRef.current) return;
+  
+    const expectedLength = dim * dim * dim;
+    if (rawData.length !== expectedLength) {
+      console.warn("rawData length mismatch", rawData.length, "expected", expectedLength);
+      return;
     }
+  
+    const newTexture = new Three.Data3DTexture(rawData, dim, dim, dim);
+    newTexture.format = Three.RedFormat;
+    newTexture.type = Three.FloatType;
+    newTexture.internalFormat = 'R32F';
+    newTexture.minFilter = Three.LinearFilter;
+    newTexture.magFilter = Three.LinearFilter;
+    newTexture.unpackAlignment = 1;
+    newTexture.needsUpdate = true;
+  
+    volumeTextureRef.current = newTexture;
+    uniformsRef.current.u_volume.value = newTexture;
   }, [rawData]);
+  
   
   const containerRef = useRef<HTMLDivElement | null>(null);
 

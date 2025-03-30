@@ -1,25 +1,23 @@
 import React from "react";
-import "../styling/PythonConsole.css"; // optional CSS file
+import "../styling/PythonConsole.css";
 
-interface PythonConsoleProps {
-  logs: string[];
-}
-
-const PythonConsole: React.FC<PythonConsoleProps> = ({ logs }) => {
-  return (
-    <div className="python-console">
-      <strong>Console</strong>
-      <div className="python-console-logs">
-        {logs.length === 0 ? (
-          <div className="python-console-empty">No output</div>
-        ) : (
-          logs.map((log, i) => (
-            <div key={i} className="python-console-line">{log}</div>
-          ))
-        )}
+const PythonConsole = ({
+    errors,
+    editorWidth,
+  }: {
+    errors: string[];
+    editorWidth: number;
+  }) => {
+    return (
+      <div
+        className="python-console"
+        style={{ left: `${editorWidth + 20}px` }}
+      >
+        {errors.map((e, i) => (
+          <pre key={i}>{e}</pre>
+        ))}
       </div>
-    </div>
-  );
-};
-
-export default PythonConsole;
+    );
+  };
+  
+  export default PythonConsole;

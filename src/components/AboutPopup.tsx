@@ -36,10 +36,10 @@ const AboutPopup: React.FC<Props> = ({ onClose, aboutButtonRef }) => {
           Fields is a volumetric modeling sandbox that uses Python-defined scalar fields and GPU-powered raymarching for real-time rendering.
         </p>
         <p>
-          Switch between volume and surface view, tune parameters, and export meshes with marching cubes!
+          Switch between volume and surface view, tune settings, and export meshes with marching cubes.
         </p>
         <p>
-            Created by Gil Sunshine with help from the collective efforts of people on the internet.
+            Created by Gil Sunshine with a lot of help from the collective efforts of people on the internet.
         </p>
       </div>
     </div>

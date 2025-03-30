@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import CodeEditor, { CodeEditorHandle } from "./components/CodeEditor";
 import ThreeCanvas from './components/ThreeCanvas';
-import { executePythonCode } from "./utils/pyodideRunner";
+import { lintPythonCode, executePythonCode } from "./utils/pyodideRunner";
 import { generateMeshFromScalarField } from "./utils/MarchingCubes";
 import { splitBufferGeometry } from "./utils/splitBufferGeometry";
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
@@ -16,78 +16,70 @@ import PythonConsole from "./components/PythonConsole";
 
 
 import './App.css';
-// import Draggable from "react-draggable";
+import Draggable from "react-draggable";
 
 const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below!
 import numpy as np
 
+# SDF: Sphere
+def sdf_sphere(x, y, z, center=(0.5, 0.5, 0.5), radius=0.35):
+    dx = x - center[0]
+    dy = y - center[1]
+    dz = z - center[2]
+    return np.sqrt(dx**2 + dy**2 + dz**2) - radius
+
+# Generic Scalar Field: Wave pattern
+def wave_pattern(x, y, z, freq=5.0):
+    return (np.sin(freq * x) + np.sin(freq * y) + np.sin(freq * z)) / 3.0
+
+# Smooth step function for blending
 def smoothstep(edge0, edge1, x):
     t = np.clip((x - edge0) / (edge1 - edge0), 0.0, 1.0)
-    return t * t * (3 - 2 * t)
+    return t * t * (3.0 - 2.0 * t)
 
-# Signed distance to box shell
-def box_shell(x, y, z, center=(0.5, 0.5, 0.5), inner=0.3, outer=0.4):
-    dx = np.abs(x - center[0])
-    dy = np.abs(y - center[1])
-    dz = np.abs(z - center[2])
-    r = np.maximum.reduce([dx, dy, dz])
-    return np.maximum(r - outer, inner - r)
-
-# Gyroid TPMS function
-def gyroid(x, y, z, freq=6.0):
-    f = freq * np.pi
-    val = (
-        np.sin(f * x) * np.cos(f * y) +
-        np.sin(f * y) * np.cos(f * z) +
-        np.sin(f * z) * np.cos(f * x)
-    )
-    return val / 3.0  # Normalize to roughly [-1, 1]
-
+# Final scalar field
 def scalar_field(x, y, z):
-    shell = box_shell(x, y, z)
+    sdf = sdf_sphere(x, y, z)
+    wave = wave_pattern(x, y, z, freq=20.0)
 
-    # Gyroid inside the box
-    gyroid_val = gyroid(x, y, z)
+    # Blend wave pattern inside the sphere using a soft mask
+    mask = smoothstep(0.0, 0.1, -sdf)  # 1 inside, 0 outside
+    blended = wave * mask + sdf * (1.0 - mask)
 
-    # Smooth blend from gyroid (inside) to shell (outside)
-    dx = np.abs(x - 0.5)
-    dy = np.abs(y - 0.5)
-    dz = np.abs(z - 0.5)
-    r = np.maximum.reduce([dx, dy, dz])
-    blend = smoothstep(0.295, 0.305, r)
-    
-    sdf = (1 - blend) * gyroid_val + blend * shell
-
-    # Clamp to SDF range [-1, 1] and normalize to uint8
-    sdf = np.clip(sdf, -1.0, 1.0)
-    sdf = (sdf + 1.0) / 2.0  # Now: -1 → 0, 0 → 0.5, +1 → 1.0
-    sdf *= 255
-    return sdf.astype(np.uint8)`;
+    # Normalize to [-1, 1]
+    blended = np.clip(blended, -1.0, 1.0)
+    return blended
+`;
 
 const App = () => {
-  // const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON_CODE);
-  const [rawData, setRawData] = useState<Uint8Array | null>(null);
+  const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON_CODE);
+  const [rawData, setRawData] = useState<Float32Array | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [pythonError, setPythonError] = useState<string[]>([]);
   const [renderMode, setRenderMode] = useState<"surface" | "volume">("volume");
   const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
-
+  const [consolePos, setConsolePos] = useState({ top: 0, left: 0 });
+  const [editorWidth, setEditorWidth] = useState(0);
 
   // Create a ref for the CodeEditor
   const editorRef = useRef<CodeEditorHandle>(null);
   const canvasRef = useRef<{ resize: () => void } | null>(null);
   const aboutButtonRef = useRef<HTMLSpanElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
+
 
 
   // Slider controls state
   const [u_dt, setUDt] = useState(0.01);
   const [u_color, setUColor] = useState(1.0);
-  const [u_alphaVal, setUAlphaVal] = useState(1.0);
+  const [u_alphaVal, setUAlphaVal] = useState(10.0);
   const [u_isoValue, setUIsoValue] = useState(0);
-  const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.5, y: 0.5, z: 0.5 });
-  const [showControls, setShowControls] = useState(true);
+  const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.0, y: 0.0, z: 0.0 });
+  const [showControls, setShowControls] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  // const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
+  const [aboutPosition, setAboutPosition] = useState({ x: 100, y: 100 });
 
    // Run the default code once on mount
    useEffect(() => {
@@ -96,6 +88,8 @@ const App = () => {
         const code = editorRef.current.getCode();
         try {
           const result = await executePythonCode(code);
+          console.log("✅ Generated data:", result.length);
+
           setRawData(result);
         } catch (error) {
           console.error("Error executing default Python code:", error);
@@ -107,12 +101,24 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Render mode changed:", renderMode);
-  }, [renderMode]);
+    if (!editorContainerRef.current) return;
+  
+    const observer = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        setEditorWidth(entry.contentRect.width);
+      }
+    });
+  
+    observer.observe(editorContainerRef.current);
+  
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
-    console.log("Error:", error);
-  }, [error]);
+    console.log("Render mode changed:", renderMode);
+  }, [renderMode]);
 
   useEffect(() => {
     const onWindowResize = () => canvasRef.current?.resize();
@@ -120,25 +126,48 @@ const App = () => {
     return () => window.removeEventListener("resize", onWindowResize);
   }, []);
 
+
   // When "Run Code" is pressed, get the current code from the editor and evaluate it
   const handleRunCode = useCallback(async () => {
     if (editorRef.current) {
       const code = editorRef.current.getCode();
-      console.log("Evaluating code...");
+      console.log("Linting and evaluating code...");
       setLoading(true);
-      setError(null);
-      setConsoleLogs([]); // Clear previous logs
+      setPythonError([]);
+      setConsoleLogs([]);
+  
+      // First, lint the code
+      const lintResults = await lintPythonCode(code);
+      if (lintResults.length > 0) {
+        const formatted = lintResults.map(e => 
+          `Line ${e.line + 1}, Col ${e.column + 1}: ${e.message}`
+        );
+        setPythonError(formatted);
+        setLoading(false); // prevent spinner hanging
+        return; // stop execution on lint errors
+      }
+  
+      const extractRelevantPythonError = (fullError: string): string => {
+        const lines = fullError.split("\n");
+        const startIndex = lines.findIndex(line =>
+          line.includes('File "<exec>"') || line.includes('File "<stdin>"')
+        );
+        if (startIndex === -1) return fullError;
+        return lines.slice(startIndex, startIndex + 4).join("\n");
+      };
   
       try {
         const result = await executePythonCode(code);
+        console.log("✅ Generated data:", result.length);
+
         setRawData(result);
-      } catch (error: any) {
-        const message = error.message || "Unknown error";
-        setError("There was an error running your Python code.");
-        setConsoleLogs([message]);
-      } finally {
-        setLoading(false);
+      } catch (err: any) {
+        const rawMessages = err.message.split("\n\n");
+        const formattedErrors = rawMessages.map(extractRelevantPythonError);
+        setPythonError(formattedErrors);
       }
+  
+      setLoading(false);
     }
   }, []);
 
@@ -149,8 +178,14 @@ const App = () => {
       console.error("No volume data available to generate mesh.");
       return;
     }
-  
-    const fullGeometry: THREE.BufferGeometry = generateMeshFromScalarField(rawData, dim, 1, u_isoValue * 255);
+    const remappedValues = new Float32Array(rawData.length);
+    for (let i = 0; i < rawData.length; i++) {
+      const val = (rawData[i] + 1) * 0.5 * 255; // [-1,1] → [0,255]
+      remappedValues[i] = Math.max(0, Math.min(255, val)); // Clamp
+    }
+    
+    // Then pass it in:
+    const fullGeometry: THREE.BufferGeometry = generateMeshFromScalarField(rawData, dim, 1, u_isoValue);
   
     const triangleCount = fullGeometry.index
       ? fullGeometry.index.count / 3
@@ -193,30 +228,12 @@ const App = () => {
   
   // Combine uniform overrides in an object that is memoized if needed
   const uniformsOverrides = { 
-    u_dt, 
-    u_color, 
+    u_dt, u_color, 
     u_alphaVal, 
     u_isoValue, 
     u_crossSectionSize, 
     u_renderMode: renderMode === "volume" ? 1.0 : 0.0,
   };
-
-  // if (loading) {
-  //   return (
-  //     <div
-  //       style={{
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         height: "100vh",
-  //         background: "#fff",
-  //         color: "#000",
-  //       }}
-  //     >
-  //       <h1>Setting Up Volumetric Sandbox</h1>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="app-container">
@@ -242,28 +259,16 @@ const App = () => {
           </button>    
         </div>      
       </div>
-      <Split
-        className="split-container"
-        sizes={[42, 58]}
-        minSize={200}
-        gutterSize={8}
-        // snapOffset={30}
-      >
+      <Split className="split-container" sizes={[45, 55]} minSize={200} gutterSize={8}>
         {/* LEFT: Editor */}
-        <div className="editor-panel">
-          <CodeEditor initialCode={DEFAULT_PYTHON_CODE} ref={editorRef} />
-
-          <div className="console-button-wrapper">
-            <button
-            className="evaluate-btn"
-              onClick={handleRunCode}
-            >
-              Evaluate Python
-            </button>
-          </div>
-          <PythonConsole logs={consoleLogs} />
-
+        <div className="editor-panel" ref={editorContainerRef}>
+        <CodeEditor initialCode={DEFAULT_PYTHON_CODE} ref={editorRef} />
+        <div className="console-button-wrapper">
+          <button className="evaluate-btn" ref={buttonRef} onClick={handleRunCode}>
+            Evaluate
+          </button>
         </div>
+      </div>
 
       {/* RIGHT: Canvas + controls */}
       <div className="canvas-panel">
@@ -304,6 +309,7 @@ const App = () => {
 
         </div>
         </Split>
+        {pythonError.length > 0 && <PythonConsole errors={pythonError} editorWidth={editorWidth} />}
       </div>
 
   );

@@ -51,8 +51,8 @@ const ControlsPanel: React.FC<Props> = ({
           right: "6px",
           background: "transparent",
           border: "none",
-          fontSize: "18px",
-          color: "#fff",
+          fontSize: "24px",
+          color: "#000",
           cursor: "pointer",
         }}
         title="Close"
@@ -60,23 +60,15 @@ const ControlsPanel: React.FC<Props> = ({
         ✕
       </button>
 
-      <div style={{ marginBottom: "12px" }}>
-        <button
-          onClick={() => setUColor(0)}
-          style={{ marginRight: "8px", padding: "6px 12px", cursor: "pointer" }}
-        >
-          Normal
-        </button>
-        <button
-          onClick={() => setUColor(1)}
-          style={{ padding: "6px 12px", cursor: "pointer" }}
-        >
-          Phong
-        </button>
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "8px", marginRight: "8px", paddingTop: "40px"}}>
 
-      <div style={{ marginBottom: "12px" }}>
-        <label>
+        <Slider label="Step Size" value={u_dt} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
+        <Slider label="X Section" value={u_crossSectionSize.x} setValue={(x) => setUCrossSectionSize({ ...u_crossSectionSize, x })} min={-1.0} max={1.0} step={0.02} />
+        <Slider label="Y Section" value={u_crossSectionSize.y} setValue={(y) => setUCrossSectionSize({ ...u_crossSectionSize, y })} min={-1.0} max={1.0} step={0.02} />
+        <Slider label="Z Section" value={u_crossSectionSize.z} setValue={(z) => setUCrossSectionSize({ ...u_crossSectionSize, z })} min={-1.0} max={1.0} step={0.02} />
+
+        <div style={{ marginTop: "18px" }}>
+        <label  style={{ fontSize:"18px" }}>
           <input
             type="radio"
             name="renderMode"
@@ -86,30 +78,46 @@ const ControlsPanel: React.FC<Props> = ({
           />
           Volume
         </label>
-        <label style={{ marginLeft: "10px" }}>
-          <input
-            type="radio"
-            name="renderMode"
-            value="surface"
-            checked={renderMode === "surface"}
-            onChange={() => setRenderMode("surface")}
-          />
-          Surface
-        </label>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <Slider label="Step Size" value={u_color} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
-
-        <Slider label="Step Size" value={u_dt} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
-        <Slider label="Alpha" value={u_alphaVal} setValue={setUAlphaVal} min={0.00} max={2.0} step={0.01} />
+        </div>
+        <Slider label="Alpha" value={u_alphaVal} setValue={setUAlphaVal} min={0.00} max={10.00} step={0.01} />
+        <div style={{ marginTop: "18px" }}>
+            <label style={{ fontSize:"18px" }}>
+            <input
+                type="radio"
+                name="renderMode"
+                value="surface"
+                checked={renderMode === "surface"}
+                onChange={() => setRenderMode("surface")}
+            />
+            Surface
+            </label>
+            </div>
         <Slider label="Iso Value" value={u_isoValue} setValue={setUIsoValue} min={-1} max={1} step={0.01} />
-        <Slider label="X Section" value={u_crossSectionSize.x} setValue={(x) => setUCrossSectionSize({ ...u_crossSectionSize, x })} min={0.02} max={0.5} step={0.01} />
-        <Slider label="Y Section" value={u_crossSectionSize.y} setValue={(y) => setUCrossSectionSize({ ...u_crossSectionSize, y })} min={0.02} max={0.5} step={0.01} />
-        <Slider label="Z Section" value={u_crossSectionSize.z} setValue={(z) => setUCrossSectionSize({ ...u_crossSectionSize, z })} min={0.02} max={0.5} step={0.01} />
-      </div>
 
-      <button
+        <div style={{ marginBottom: "12px" }}>
+            <label>
+                <input
+                    type="radio"
+                    name="materialMode"
+                    value="normal"
+                    checked={u_color === 0}
+                    onChange={() => setUColor(0)}
+            />
+            Normal
+            </label>
+            <label style={{ marginLeft: "10px" }}>
+                <input
+                    type="radio"
+                    name="materialMode"
+                    value="phong"
+                    checked={u_color === 1}
+                    onChange={() => setUColor(1)}
+            />
+            Phong
+            </label>
+        </div>
+
+       <button
         onClick={handleSaveMesh}
         style={{
           padding: "8px 12px",
@@ -118,11 +126,11 @@ const ControlsPanel: React.FC<Props> = ({
           color: "#000",
           borderRadius: "6px",
           fontSize: "16px",
-          marginTop: "16px"
         }}
       >
         Save STL
       </button>
+      </div>
     </div>
   );
 };

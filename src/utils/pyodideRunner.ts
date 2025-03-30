@@ -8,7 +8,6 @@ export const initPyodide = async () => {
       indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.4/full/",
     });
   }
-
   return pyodideInstance;
 };
 
@@ -37,7 +36,6 @@ export const loadLintingPackages = async () => {
     lintingPackagesLoaded = true;
   }
 };
-
 
 export const lintPythonCode = async (
   code: string
@@ -82,30 +80,54 @@ output.getvalue()
   }
 };
 
+// Dedent utility
+function dedent(str: string): string {
+  const lines = str.split("\n");
+  const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+  const indent = Math.min(...nonEmptyLines.map((line) => line.match(/^ */)![0].length));
+  return lines.map((line) => line.slice(indent)).join("\n");
+}
 
-export const executePythonCode = async (userCode: string): Promise<Uint8Array> => {
+export const executePythonCode = async (userCode: string): Promise<Float32Array> => {
   const pyodide = await initPyodide();
   await loadExecutionPackages();
 
-  const script = `
+  const fullScript = dedent(`
 import numpy as np
 
-${userCode}
+${userCode.trimStart()}
 
-resolution = 256
-grid = np.linspace(0, 1, resolution)
-X, Y, Z = np.meshgrid(grid, grid, grid, indexing="ij")
-values = scalar_field(X, Y, Z).astype(np.float32)
-values -= values.min()
-values /= values.max()
-values *= 255
-values = np.clip(values, 0, 255).astype(np.uint8)
-values.tobytes()
-  `;
+def evaluate_in_chunks(resolution=256, chunk_size=64):
+    grid = np.linspace(0, 1, resolution)
+    full_values = np.zeros((resolution, resolution, resolution), dtype=np.float32)
 
+    for x0 in range(0, resolution, chunk_size):
+        for y0 in range(0, resolution, chunk_size):
+            for z0 in range(0, resolution, chunk_size):
+                x1 = min(x0 + chunk_size, resolution)
+                y1 = min(y0 + chunk_size, resolution)
+                z1 = min(z0 + chunk_size, resolution)
+
+                X, Y, Z = np.meshgrid(
+                    grid[x0:x1],
+                    grid[y0:y1],
+                    grid[z0:z1],
+                    indexing="ij"
+                )
+
+                full_values[x0:x1, y0:y1, z0:z1] = scalar_field(X, Y, Z).astype(np.float32)
+
+    return full_values
+
+raw_data = evaluate_in_chunks(256, 64)
+clipped = np.clip(raw_data, -1.0, 1.0).astype(np.float32)
+clipped = clipped.flatten()
+clipped
+`);
   try {
-    const rawBytes = await pyodide.runPythonAsync(script);
-    return new Uint8Array(rawBytes);
+    const result = await pyodide.runPythonAsync(fullScript);
+    const data = result.toJs({ create_proxies: false }) as Float32Array;
+    return data;
   } catch (error) {
     console.error("Error executing Python code:", error);
     throw error;

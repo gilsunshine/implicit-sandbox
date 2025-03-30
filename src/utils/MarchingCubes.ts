@@ -302,7 +302,7 @@ import * as THREE from 'three';
  * @returns A THREE.BufferGeometry built from the computed triangles.
  */
 export function generateMeshFromScalarField(
-  rawData: Uint8Array,
+  rawData: Float32Array,
   resolution: number,
   scale: number,
   isolevel: number,
@@ -321,7 +321,8 @@ export function generateMeshFromScalarField(
         const posY = (y / (resolution - 1)) * scale;
         const posZ = (z / (resolution - 1)) * scale;
         points.push(new THREE.Vector3(posX, posY, posZ));
-        values.push(rawData[index]);
+        const scalarValue = rawData[index];
+        values.push(scalarValue);
       }
     }
   }

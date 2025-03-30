@@ -1,9 +1,9 @@
-import { useState, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
 import { autocompletion } from "@codemirror/autocomplete";
-// import { coolGlow } from "thememirror";
+import { coolGlow } from "thememirror";
 import { linter, Diagnostic } from "@codemirror/lint";
 import {keymap} from "@codemirror/view"
 import {indentWithTab} from "@codemirror/commands"
