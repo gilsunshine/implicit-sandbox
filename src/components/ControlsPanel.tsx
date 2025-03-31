@@ -152,7 +152,6 @@ type SliderProps = {
           <input
             type="range"
             className="custom-slider"
-
             value={value}
             min={min}
             max={max}
