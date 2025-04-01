@@ -94,6 +94,10 @@ body, html {
   background: #777;
 }
 
+.editor-container {
+  overflow: auto;
+}
+
 .app-container {
   height: 100vh;
   display: flex;

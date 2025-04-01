@@ -1,4 +1,5 @@
 import { loadPyodide } from "pyodide";
+import { sdfLibrary } from "./sdf_library";
 
 let pyodideInstance: any = null;
 
@@ -22,6 +23,19 @@ export const loadExecutionPackages = async () => {
   }
 };
 
+let sdfLibraryLoaded = false;
+
+export const initSDFLibrary = async () => {
+  if (sdfLibraryLoaded) return;
+
+  const pyodide = await initPyodide();
+  await loadExecutionPackages();
+
+  await pyodide.runPythonAsync(dedent(sdfLibrary));
+  sdfLibraryLoaded = true;
+};
+
+
 let lintingPackagesLoaded = false;
 
 export const loadLintingPackages = async () => {
@@ -43,8 +57,10 @@ export const lintPythonCode = async (
   const pyodide = await initPyodide();
   await loadLintingPackages();
 
+  const fullCode = `${sdfLibrary.trim()}\n\n${code}`;
+
   try {
-    pyodide.FS.writeFile("temp.py", code);
+    pyodide.FS.writeFile("temp.py", fullCode);
 
     const result = await pyodide.runPythonAsync(`
 from pyflakes.api import checkPath
@@ -57,16 +73,23 @@ checkPath("temp.py", reporter)
 output.getvalue()
     `);
 
+    const sdfLineOffset = sdfLibrary.trim().split("\n").length;
+
     const diagnostics = result
       .trim()
       .split("\n")
       .map((line: string) => {
         const match = line.match(/temp\.py:(\d+):(\d+):?\s+(.*)/);
         if (!match) return null;
-
+    
         const [, lineStr, columnStr, message] = match;
+        const rawLine = parseInt(lineStr, 10);
+    
+        const userLine = rawLine - sdfLineOffset;
+        if (userLine < 0) return null;
+    
         return {
-          line: parseInt(lineStr, 10) - 1,
+          line: userLine - 2, // Need to find where the offset is coming from
           column: parseInt(columnStr, 10) - 1,
           message,
         };
@@ -80,6 +103,7 @@ output.getvalue()
   }
 };
 
+
 // Dedent utility
 function dedent(str: string): string {
   const lines = str.split("\n");
@@ -91,13 +115,14 @@ function dedent(str: string): string {
 export const executePythonCode = async (userCode: string): Promise<Float32Array> => {
   const pyodide = await initPyodide();
   await loadExecutionPackages();
+  await initSDFLibrary(); // Ensure this happens once
 
-  const fullScript = dedent(`
-import numpy as np
+  try {
+    // Evaluate user code (which defines scalar_field)
+    await pyodide.runPythonAsync(userCode);
 
-${userCode.trimStart()}
-
-def evaluate_in_chunks(resolution=256, chunk_size=64):
+    // Evaluate scalar_field over the grid
+    const evalScript = dedent(`def evaluate_in_chunks(resolution=256, chunk_size=64):
     grid = np.linspace(0, 1, resolution)
     full_values = np.zeros((resolution, resolution, resolution), dtype=np.float32)
 
@@ -124,12 +149,10 @@ clipped = np.clip(raw_data, -1.0, 1.0).astype(np.float32)
 clipped = clipped.flatten()
 clipped
 `);
-  try {
-    const result = await pyodide.runPythonAsync(fullScript);
-    const data = result.toJs({ create_proxies: false }) as Float32Array;
-    return data;
-  } catch (error) {
-    console.error("Error executing Python code:", error);
-    throw error;
-  }
+const result = await pyodide.runPythonAsync(evalScript);
+return result.toJs({ create_proxies: false }) as Float32Array;
+} catch (error) {
+console.error("Error executing Python code:", error);
+throw error;
+}
 };

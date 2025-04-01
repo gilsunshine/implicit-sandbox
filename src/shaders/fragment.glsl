@@ -103,7 +103,7 @@ void main(){
                     float diffuse=max(dot(normal,lightDir),0.);
                     float diffuse2=max(dot(normal,lightDir2),0.);
                     float ambient=.3;
-                    float shading=ambient+.4*diffuse+.4*diffuse2;
+                    float shading=ambient+.8*diffuse+.8*diffuse2;
                     vec3 isoColor=palette((u_isoValue+1.)/2.);
                     color=vec4(isoColor*shading,1.);
                 }

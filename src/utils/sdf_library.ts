@@ -1,6 +1,6 @@
-import numpy as np
+export const sdfLibrary = 
 
-class SDF:
+`class SDF:
     def __init__(self, fn):
         self.fn = fn
 
@@ -346,3 +346,4 @@ def normalize_to_sdf_range(f):
             return np.zeros_like(f)
         normalized = (f - f_min) / (f_max - f_min)
         return normalized * 2.0 - 1.0
+`;

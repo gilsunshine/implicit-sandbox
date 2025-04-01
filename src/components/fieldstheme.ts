@@ -7,8 +7,8 @@ const fieldsTheme = createTheme({
 	settings: {
 		background: '#191919',
 		foreground: '#cdff70',
-		caret: '#5d00ff',
-		selection: 'rgb(55, 0, 255)',
+		caret: 'rgb(217, 255, 0)',
+		selection: 'rgb(164, 139, 255)',
 		lineHighlight: '#353535',
 		gutterBackground: '#000000',
 		gutterForeground: '#8c8c8c',

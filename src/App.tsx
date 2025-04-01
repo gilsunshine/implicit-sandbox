@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import CodeEditor, { CodeEditorHandle } from "./components/CodeEditor";
 import ThreeCanvas from './components/ThreeCanvas';
-import { lintPythonCode, executePythonCode } from "./utils/pyodideRunner";
+import { lintPythonCode, executePythonCode, initSDFLibrary } from "./utils/pyodideRunner";
 import { generateMeshFromScalarField } from "./utils/MarchingCubes";
 import { splitBufferGeometry } from "./utils/splitBufferGeometry";
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,39 +15,45 @@ import PythonConsole from "./components/PythonConsole";
 import './App.css';
 
 const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below.
-# You can find example functions here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
+# You can find built-in functions, which are being added to and improved here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
+
 # Project in development! Updates and improvements forthcoming.
+
+# Use the control panel to update display settings and export meshes!
 
 import numpy as np
 
-# SDF: Sphere
-def sdf_sphere(x, y, z, center=(0.5, 0.5, 0.5), radius=0.35):
-    dx = x - center[0]
-    dy = y - center[1]
-    dz = z - center[2]
-    return np.sqrt(dx**2 + dy**2 + dz**2) - radius
+# Define shapes using preloaded functions
+box = sdf_box()
+# Chain transformations
+box = box.scale(0.25, 0.25, 0.5).rotate_y(np.pi / 3, origin=(0.5, 0.5, 0.5)).rotate_x(np.pi / 4).translate(ty=-0.25)
 
-# Generic Scalar Field: Wave pattern
-def wave_pattern(x, y, z, freq=5.0):
-    return (np.sin(freq * x) + np.sin(freq * y) + np.sin(freq * z)) / 3.0
+# Alternatively, change settings on definition
+box2 = sdf_box(bounds=(0.1, 0.2, 0.3), center=(0.5, 0.5, 0.4))
 
-# Smooth step function for blending
-def smoothstep(edge0, edge1, x):
-    t = np.clip((x - edge0) / (edge1 - edge0), 0.0, 1.0)
-    return t * t * (3.0 - 2.0 * t)
+# Try different shapes
+sphere = sdf_sphere(radius=0.4)
 
-# Final scalar field
+# Some fun stuff like tpms built in, more to come
+tpms = gyroid(4.0)
+
+# Composite shapes
+shape = smooth_intersection(sphere, tpms, 0.2)
+
+# Define your own functions
+def sdf_torus(x, y, z, major_radius=0.3, minor_radius=0.1, center=(0.5, 0.5, 0.5)):
+    # Compute distance in the XZ plane from the origin
+    qx = np.sqrt((x - center[0])**2 + (z - center[0])**2) - major_radius
+    qy = y - center[0]
+    return np.sqrt(qx**2 + qy**2) - minor_radius
+
+# Final scalar field. Must have final scalar field returned from scalar_field function.
 def scalar_field(x, y, z):
-    sdf = sdf_sphere(x, y, z)
-    wave = wave_pattern(x, y, z, freq=20.0)
+    # Try return shape(x, y, z) instead
+    return tpms(x, y, z)
 
-    # Blend wave pattern inside the sphere using a soft mask
-    mask = smoothstep(0.0, 0.1, -sdf)  # 1 inside, 0 outside
-    blended = wave * mask + sdf * (1.0 - mask)
-
-    # Normalize to [-1, 1]
-    blended = np.clip(blended, -1.0, 1.0)
-    return blended
+  
+    
 `;
 
 const App = () => {
@@ -66,8 +72,6 @@ const App = () => {
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
 
-
-
   // Slider controls state
   const [u_dt, setUDt] = useState(0.01);
   const [u_color, setUColor] = useState(1.0);
@@ -78,6 +82,7 @@ const App = () => {
   const [showAbout, setShowAbout] = useState(false);
 
    // Run the default code once on mount
+
    useEffect(() => {
     async function runDefault() {
       if (editorRef.current) {

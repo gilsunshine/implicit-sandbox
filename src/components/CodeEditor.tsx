@@ -2,12 +2,23 @@ import { useState, useImperativeHandle, forwardRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { python } from "@codemirror/lang-python";
-import { autocompletion } from "@codemirror/autocomplete";
+import { autocompletion, CompletionContext } from "@codemirror/autocomplete";
 import { linter, Diagnostic } from "@codemirror/lint";
 import {keymap} from "@codemirror/view"
 import {indentWithTab} from "@codemirror/commands"
 import { lintPythonCode } from "../utils/pyodideRunner";
 import fieldsTheme from './fieldstheme';
+import { sdfCompletions } from "../utils/sdf_completions";
+
+function sdfCompletionSource(context: CompletionContext) {
+  const word = context.matchBefore(/\w*/);
+  if (!word || word.from === word.to) return null;
+  return {
+    from: word.from,
+    options: sdfCompletions,
+    validFor: /^\w*$/,
+  };
+}
 
 export interface CodeEditorHandle {
   getCode: () => string;
@@ -47,7 +58,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
           extensions: [
             basicSetup,
             python(),
-            autocompletion(),
+            autocompletion({ override: [sdfCompletionSource] }),
             fieldsTheme,
             EditorView.lineWrapping,
             pythonLinter,
@@ -63,9 +74,6 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(
       <div
         ref={editorParentRef}
         className="editor-container"
-        style={{
-          overflow: "auto",
-        }}
       />
     );
   }
