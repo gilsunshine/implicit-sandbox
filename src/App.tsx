@@ -42,7 +42,6 @@ shape = smooth_intersection(sphere, tpms, 0.2)
 
 # Define your own functions
 def sdf_torus(x, y, z, major_radius=0.3, minor_radius=0.1, center=(0.5, 0.5, 0.5)):
-    # Compute distance in the XZ plane from the origin
     qx = np.sqrt((x - center[0])**2 + (z - center[0])**2) - major_radius
     qy = y - center[0]
     return np.sqrt(qx**2 + qy**2) - minor_radius
@@ -53,7 +52,7 @@ def scalar_field(x, y, z):
     return tpms(x, y, z)
 
   
-    
+
 `;
 
 const App = () => {
