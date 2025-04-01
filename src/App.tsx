@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import CodeEditor, { CodeEditorHandle } from "./components/CodeEditor";
 import ThreeCanvas from './components/ThreeCanvas';
-import { lintPythonCode, executePythonCode, initSDFLibrary } from "./utils/pyodideRunner";
+import { lintPythonCode, executePythonCode } from "./utils/pyodideRunner";
 import { generateMeshFromScalarField } from "./utils/MarchingCubes";
 import { splitBufferGeometry } from "./utils/splitBufferGeometry";
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
