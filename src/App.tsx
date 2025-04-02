@@ -74,11 +74,14 @@ const App = () => {
   // Slider controls state
   const [u_dt, setUDt] = useState(0.01);
   const [u_color, setUColor] = useState(1.0);
-  const [u_alphaVal, setUAlphaVal] = useState(10.0);
+  const [u_alphaVal, setUAlphaVal] = useState(5);
   const [u_isoValue, setUIsoValue] = useState(0);
   const [u_crossSectionSize, setUCrossSectionSize] = useState({ x: 0.0, y: 0.0, z: 0.0 });
   const [showControls, setShowControls] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+
+  const [u_minValue, setUMinVal] = useState(-0.5);
+  const [u_maxValue, setUMaxVal] = useState(0.5);
 
    // Run the default code once on mount
 
@@ -91,6 +94,18 @@ const App = () => {
           console.log("Generated data:", result.length);
 
           setRawData(result);
+
+          let min = Infinity;
+          let max = -Infinity;
+      
+          for (let i = 0; i < result.length; i++) {
+            const v = result[i];
+            if (v < min) min = v;
+            if (v > max) max = v;
+          }
+          setUMinVal(min)
+          setUMaxVal(max)
+
         } catch (error) {
           console.error("Error executing default Python code:", error);
         }
@@ -159,8 +174,19 @@ const App = () => {
       try {
         const result = await executePythonCode(code);
         console.log("Generated data:", result.length);
-
         setRawData(result);
+
+        let min = Infinity;
+        let max = -Infinity;
+    
+        for (let i = 0; i < result.length; i++) {
+          const v = result[i];
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+        setUMinVal(min)
+        setUMaxVal(max)
+
       } catch (err: any) {
         const rawMessages = err.message.split("\n\n");
         const formattedErrors = rawMessages.map(extractRelevantPythonError);
@@ -228,11 +254,14 @@ const App = () => {
   
   // Combine uniform overrides in an object that is memoized if needed
   const uniformsOverrides = { 
-    u_dt, u_color, 
+    u_dt, 
+    u_color, 
     u_alphaVal, 
     u_isoValue, 
     u_crossSectionSize, 
     u_renderMode: renderMode === "volume" ? 1.0 : 0.0,
+    u_minValue,
+    u_maxValue
   };
 
   return (

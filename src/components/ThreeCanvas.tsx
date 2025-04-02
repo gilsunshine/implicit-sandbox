@@ -13,6 +13,8 @@ interface ThreeCanvasProps {
     u_isoValue: number;
     u_crossSectionSize: { x: number; y: number; z: number };
     u_renderMode: number;
+    u_minValue: number;
+    u_maxValue: number;
   };
 }
 
@@ -26,7 +28,7 @@ const ThreeCanvas = ({
   
   // Refs to hold scene objects so they aren't reinitialized on every update
   const sceneRef = useRef<Three.Scene | null>(null);
-  const cameraRef = useRef<Three.PerspectiveCamera | null>(null);
+  const cameraRef = useRef<Three.OrthographicCamera | null>(null);
   const rendererRef = useRef<Three.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const meshRef = useRef<Three.Mesh | null>(null);
@@ -57,9 +59,10 @@ const ThreeCanvas = ({
     rendererRef.current = renderer;
     
     // Camera (we set it once so it won't reset on slider changes)
-    const camera = new Three.PerspectiveCamera(5, width / height, 0.01, 1000);
-    camera.position.set(10, 10, 16);
-    camera.lookAt(new Three.Vector3(0, 0, 0));
+    const camera = new Three.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 0, 1000 );
+    camera.position.set(10, 10, 10);
+    camera.zoom = 350;
+    // camera.lookAt(new Three.Vector3(0, 0, 0));
     cameraRef.current = camera;
     
     // Scene
@@ -100,6 +103,8 @@ const ThreeCanvas = ({
       u_isoValue: { value: uniformsOverrides.u_isoValue },
       u_renderMode: { value: uniformsOverrides.u_renderMode },
       u_alphaVal: { value: uniformsOverrides.u_alphaVal },
+      u_minValue: { value: uniformsOverrides.u_minValue },
+      u_maxValue: { value: uniformsOverrides.u_maxValue },
     };
     uniformsRef.current = uniforms;
     
@@ -152,7 +157,7 @@ const ThreeCanvas = ({
       console.warn("rawData length mismatch", rawData.length, "expected", expectedLength);
       return;
     }
-  
+
     const newTexture = new Three.Data3DTexture(rawData, dim, dim, dim);
     newTexture.format = Three.RedFormat;
     newTexture.type = Three.FloatType;
@@ -164,6 +169,10 @@ const ThreeCanvas = ({
   
     volumeTextureRef.current = newTexture;
     uniformsRef.current.u_volume.value = newTexture;
+
+    uniformsRef.current.u_minValue.value = uniformsOverrides.u_minValue;
+    uniformsRef.current.u_maxValue.value = uniformsOverrides.u_maxValue;
+
   }, [rawData]);
   
   
@@ -184,7 +193,7 @@ const ThreeCanvas = ({
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
   
-      camera.aspect = width / height;
+      // camera.aspect = width / height;
       camera.updateProjectionMatrix();
   
       if (uniformsRef.current) {

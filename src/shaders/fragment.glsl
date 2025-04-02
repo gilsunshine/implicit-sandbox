@@ -8,6 +8,8 @@ uniform float u_dt;
 uniform float u_time;
 uniform float u_isoValue;
 uniform float u_alphaVal;
+uniform float u_minValue;
+uniform float u_maxValue;
 uniform float u_color;// <0.5 = normals, >=0.5 = shading
 uniform float u_renderMode;// <0.5 = surface, >=0.5 = volume
 
@@ -62,18 +64,23 @@ void main(){
     vec3 pos=rayOrigin+tHit.x*rayDir+.5;
     
     for(float t=tHit.x;t<tHit.y;t+=dt){
-        float raw=texture(u_volume,pos).r;
+        float raw=texture(u_volume,clamp(pos,0.,1.)).r;
         float sdf=raw;
         
         if(u_renderMode>.5){
-            // Volume mode
+            sdf=(raw-u_minValue)/(u_maxValue-u_minValue);
+            sdf=sdf*2.-1.;// Normalize to [-1, 1]
+            
             float alpha=smoothstep(0.,u_alphaVal,1.-abs(sdf));// near surface = more alpha
-            vec3 col=palette((sdf+1.)/2.);
+            vec3 col=palette((sdf+1.)/2.);// remap sdf to [0, 1] for palette
             vec4 sampleColor=vec4(col,alpha);
+            
             color.rgb+=(1.-color.a)*sampleColor.a*sampleColor.rgb;
             color.a+=(1.-color.a)*sampleColor.a;
+            
             if(color.a>=.95)break;
-        }else{
+        }
+        else{
             // Surface mode — SDF < isoValue means inside, crossing = surface
             if(sdf<u_isoValue){
                 float epsilon=.001;
