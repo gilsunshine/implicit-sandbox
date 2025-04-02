@@ -14,21 +14,23 @@ import ControlsPanel from "./components/ControlsPanel";
 import PythonConsole from "./components/PythonConsole";
 import './App.css';
 
-const DEFAULT_PYTHON_CODE = `# Define your scalar_field function below.
-# You can find built-in functions, which are being added to and improved here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
-
-# Project in development! Updates and improvements forthcoming.
-
+const DEFAULT_PYTHON_CODE = `# Welcome to Fields!
 # Use the control panel to update display settings and export meshes!
+
+# You can find a list of built-in functions here: https://github.com/gilsunshine/fields_documentation/blob/main/fields_documentation.py
+# And their definitions here: https://github.com/gilsunshine/implicit-sandbox/blob/main/src/python/scalar_field_lib.py
+
+# Define your own generic scalar field functions below. The built-in functions are mostly signed distance fields but yours don't have to be! 
 
 import numpy as np
 
 # Define shapes using preloaded functions
 box = sdf_box()
+
 # Chain transformations
 box = box.scale(0.25, 0.25, 0.5).rotate_y(np.pi / 3, origin=(0.5, 0.5, 0.5)).rotate_x(np.pi / 4).translate(ty=-0.25)
 
-# Alternatively, change settings on definition
+# Alternatively, change parameters on function call
 box2 = sdf_box(bounds=(0.1, 0.2, 0.3), center=(0.5, 0.5, 0.4))
 
 # Try different shapes
@@ -40,17 +42,14 @@ tpms = gyroid(4.0)
 # Composite shapes
 shape = smooth_intersection(sphere, tpms, 0.2)
 
-# Define your own functions
-def sdf_torus(x, y, z, major_radius=0.3, minor_radius=0.1, center=(0.5, 0.5, 0.5)):
-    qx = np.sqrt((x - center[0])**2 + (z - center[0])**2) - major_radius
-    qy = y - center[0]
-    return np.sqrt(qx**2 + qy**2) - minor_radius
+# Play with built in operations like twisting
+shape = op_twist(shape, k=4)
 
-# Final scalar field. Must have final scalar field returned from scalar_field function.
+# Must have final scalar field returned from scalar_field function.
 def scalar_field(x, y, z):
     # Try return shape(x, y, z) instead
     return tpms(x, y, z)
-
+  
   
 
 `;

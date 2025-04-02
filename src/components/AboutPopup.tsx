@@ -30,7 +30,7 @@ const AboutPopup: React.FC<Props> = ({ onClose, aboutButtonRef }) => {
     <div ref={popupRef} className="about-overlay">
       <div className="about-popup">
         <p>
-          Fields is a volumetric modeling sandbox that uses Python-defined scalar fields and GPU-powered raymarching for real-time rendering.
+          Fields is a volumetric modeling sandbox that uses Python-defined scalar fields and GPU-powered raymarching for rendering.
         </p>
         <p>
           Switch between volume and surface view, tune settings, and export meshes with marching cubes.

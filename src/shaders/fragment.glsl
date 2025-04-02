@@ -54,6 +54,9 @@ void main(){
     tHit.x=max(tHit.x,0.);
     
     float dt=u_dt;
+    if(u_renderMode>.5){
+        dt=.01;
+    }
     vec4 color=vec4(0.);
     
     vec3 texBoxMin=vec3(0.);

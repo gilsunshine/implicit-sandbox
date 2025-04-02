@@ -48,7 +48,7 @@ const ControlsPanel: React.FC<Props> = ({
         style={{
           position: "absolute",
           top: "6px",
-          right: "6px",
+          right: "0px",
           background: "transparent",
           border: "none",
           fontSize: "24px",
@@ -62,14 +62,14 @@ const ControlsPanel: React.FC<Props> = ({
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "8px", marginRight: "8px", paddingTop: "40px"}}>
 
-        <Slider label="Step Size" value={u_dt} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
         <Slider label="X Section" value={u_crossSectionSize.x} setValue={(x) => setUCrossSectionSize({ ...u_crossSectionSize, x })} min={-1.0} max={1.0} step={0.02} />
         <Slider label="Y Section" value={u_crossSectionSize.y} setValue={(y) => setUCrossSectionSize({ ...u_crossSectionSize, y })} min={-1.0} max={1.0} step={0.02} />
         <Slider label="Z Section" value={u_crossSectionSize.z} setValue={(z) => setUCrossSectionSize({ ...u_crossSectionSize, z })} min={-1.0} max={1.0} step={0.02} />
 
-        <div style={{ marginTop: "18px" }}>
-        <label  style={{ fontSize:"18px" }}>
+        <div style={{ marginTop: "22px" }}>
+        <label  style={{ fontSize:"20px" }}>
           <input
+            style={{ marginLeft:"0px", marginRight: "10px" }}
             type="radio"
             name="renderMode"
             value="volume"
@@ -80,9 +80,10 @@ const ControlsPanel: React.FC<Props> = ({
         </label>
         </div>
         <Slider label="Alpha" value={u_alphaVal} setValue={setUAlphaVal} min={0.00} max={10.00} step={0.01} />
-        <div style={{ marginTop: "18px" }}>
-            <label style={{ fontSize:"18px" }}>
+        <div style={{ marginTop: "22px" }}>
+            <label style={{ fontSize:"20px"}}>
             <input
+                style={{ marginLeft:"0px", marginRight: "10px" }}
                 type="radio"
                 name="renderMode"
                 value="surface"
@@ -92,11 +93,14 @@ const ControlsPanel: React.FC<Props> = ({
             Surface
             </label>
             </div>
-        <Slider label="Iso Value" value={u_isoValue} setValue={setUIsoValue} min={-1} max={1} step={0.01} />
+            <Slider label="Step Size" value={u_dt} setValue={setUDt} min={0.001} max={0.016} step={0.001} />
+            <Slider label="Iso Value" value={u_isoValue} setValue={setUIsoValue} min={-1} max={1} step={0.01} />
 
-        <div style={{ marginBottom: "12px" }}>
+
+            <div style={{ marginBottom: "20px", marginTop: "10px" }}>
             <label>
                 <input
+                    style={{ marginLeft:"0px", marginRight: "10px" }}
                     type="radio"
                     name="materialMode"
                     value="normal"
@@ -105,8 +109,9 @@ const ControlsPanel: React.FC<Props> = ({
             />
             Normal
             </label>
-            <label style={{ marginLeft: "10px" }}>
+            <label style={{ marginLeft: "20px" }}>
                 <input
+                    style={{ marginRight: "10px" }}
                     type="radio"
                     name="materialMode"
                     value="phong"
@@ -116,6 +121,7 @@ const ControlsPanel: React.FC<Props> = ({
             Phong
             </label>
         </div>
+
 
        <button
         onClick={handleSaveMesh}
