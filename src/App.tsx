@@ -71,7 +71,7 @@ const App = () => {
 
 
   // Slider controls state
-  const [u_dt, setUDt] = useState(0.01);
+  const [u_dt, setUDt] = useState(0.004);
   const [u_color, setUColor] = useState(1.0);
   const [u_alphaVal, setUAlphaVal] = useState(5);
   const [u_isoValue, setUIsoValue] = useState(0);
