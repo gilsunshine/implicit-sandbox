@@ -28,7 +28,7 @@ const ThreeCanvas = ({
   
   // Refs to hold scene objects so they aren't reinitialized on every update
   const sceneRef = useRef<Three.Scene | null>(null);
-  const cameraRef = useRef<Three.OrthographicCamera | null>(null);
+  const cameraRef = useRef<Three.PerspectiveCamera | null>(null);
   const rendererRef = useRef<Three.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const meshRef = useRef<Three.Mesh | null>(null);
@@ -59,10 +59,9 @@ const ThreeCanvas = ({
     rendererRef.current = renderer;
     
     // Camera (we set it once so it won't reset on slider changes)
-    const camera = new Three.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 0, 1000 );
-    camera.position.set(10, 10, 10);
-    camera.zoom = 350;
-    // camera.lookAt(new Three.Vector3(0, 0, 0));
+    const camera = new Three.PerspectiveCamera(2, width / height, 0.01, 1000);
+    camera.position.set(37, 37, 37);
+    camera.lookAt(new Three.Vector3(0, 0, 0));
     cameraRef.current = camera;
     
     // Scene
@@ -193,7 +192,7 @@ const ThreeCanvas = ({
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
   
-      // camera.aspect = width / height;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
   
       if (uniformsRef.current) {
