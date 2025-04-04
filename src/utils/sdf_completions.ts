@@ -68,8 +68,8 @@ export const sdfCompletions = [
     {
       label: "sdf_capped_cylinder",
       type: "function",
-      detail: "sdf_capped_cylinder(a, b, r, center)",
-      info: "SDF of a capped cylinder from point a to b with radius r.",
+      detail: "sdf_capped_cylinder(a, b, r, center, h)",
+      info: "SDF of a capped cylinder from point a to b with radius r and height h.",
     },
     {
       label: "sdf_rounded_cylinder",

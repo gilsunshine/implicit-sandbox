@@ -21,6 +21,10 @@ type Props = {
   renderMode: 'volume' | 'surface';
   setRenderMode: (mode: 'volume' | 'surface') => void;
 
+  u_dim: number;
+  setUDim: (res: number) => void;
+
+  handleRunCode: () => void;
   handleSaveMesh: () => void;
   onClose: () => void;
 };
@@ -38,12 +42,13 @@ const ControlsPanel: React.FC<Props> = ({
     setUCrossSectionSize,
     renderMode,
     setRenderMode,
+    u_dim,
+    setUDim,
     handleSaveMesh,
-    onClose,
   }) => {
   return (
     <div className="control-panel">
-      <button
+      {/* <button
         onClick={onClose}
         style={{
           position: "absolute",
@@ -58,9 +63,10 @@ const ControlsPanel: React.FC<Props> = ({
         title="Close"
       >
         ✕
-      </button>
+      </button> */}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "8px", marginRight: "8px", paddingTop: "40px"}}>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "8px", marginRight: "8px", paddingTop: "10px"}}>
 
         <Slider label="X Section" value={u_crossSectionSize.x} setValue={(x) => setUCrossSectionSize({ ...u_crossSectionSize, x })} min={-1.0} max={1.0} step={0.02} />
         <Slider label="Y Section" value={u_crossSectionSize.y} setValue={(y) => setUCrossSectionSize({ ...u_crossSectionSize, y })} min={-1.0} max={1.0} step={0.02} />
@@ -97,31 +103,62 @@ const ControlsPanel: React.FC<Props> = ({
             <Slider label="Iso Value" value={u_isoValue} setValue={setUIsoValue} min={-1} max={1} step={0.01} />
 
 
-            <div style={{ marginBottom: "20px", marginTop: "10px" }}>
-            <label>
-                <input
-                    style={{ marginLeft:"0px", marginRight: "10px" }}
-                    type="radio"
-                    name="materialMode"
-                    value="normal"
-                    checked={u_color === 0}
-                    onChange={() => setUColor(0)}
-            />
-            Normal
-            </label>
-            <label style={{ marginLeft: "20px" }}>
-                <input
-                    style={{ marginRight: "10px" }}
-                    type="radio"
-                    name="materialMode"
-                    value="phong"
-                    checked={u_color === 1}
-                    onChange={() => setUColor(1)}
-            />
-            Phong
-            </label>
-        </div>
+            <div style={{ marginBottom: "0px", marginTop: "10px" }}>
+              <strong>Material:</strong>
+                <div>
+                <label>
+                    <input
+                        style={{ marginLeft:"0px", marginRight: "10px" }}
+                        type="radio"
+                        name="materialMode"
+                        value="normal"
+                        checked={u_color === 0}
+                        onChange={() => setUColor(0)}
+                    />
+                      Normal
+                </label>
+                <label style={{ marginLeft: "20px" }}>
+                    <input
+                        style={{ marginRight: "10px" }}
+                        type="radio"
+                        name="materialMode"
+                        value="phong"
+                        checked={u_color === 1}
+                        onChange={() => setUColor(1)}
+                    />
+                      Phong
+                </label>
+                </div>
+           </div>
 
+           <div style={{ marginBottom: "20px", marginTop: "10px" }}>
+          <strong>Resolution:</strong>
+              <div>
+                <label style={{marginTop: "20px"}}>
+                      <input
+                          style={{ marginLeft:"0px", marginRight: "10px" }}
+                          type="radio"
+                          name="resolution"
+                          value="low"
+                          checked={u_dim === 128}
+                          onChange={() => setUDim(128)}
+                      />
+                        Low
+                  </label>
+                  <label style={{ marginLeft: "20px" }}>
+                      <input
+                          style={{ marginRight: "10px" }}
+                          type="radio"
+                          name="resolution"
+                          value="high"
+                          checked={u_dim === 256}
+                          onChange={() => setUDim(256)}
+                      />
+                        High
+                  </label>
+              </div>
+
+           </div>
 
        <button
         onClick={handleSaveMesh}

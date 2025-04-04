@@ -231,28 +231,30 @@ def sdf_capsule(a=(0.0, 0.0, 0.0), b=(1.0, 1.0, 1.0), r=0.2, center=(0.5, 0.5, 0
         return np.sqrt(np.sum(diff**2, axis=0)) - r
     return SDF(_fn)
 
-def sdf_capped_cylinder(a=(0.0, 0.0, 0.0), b=(0.0, 1.0, 0.0), r=0.5, center=(0.5, 0.5, 0.5)):
+def sdf_capped_cylinder(a=(0.0, 0.0, 0.0), b=(0.0, 1.0, 0.0), r=0.5, center=(0.5, 0.5, 0.5), h=1.0):
     def _fn(x, y, z):
         p = np.stack((x - center[0], y - center[1], z - center[2]), axis=0)
         a_array = np.array(a).reshape(3, 1, 1, 1)
         b_array = np.array(b).reshape(3, 1, 1, 1)
-        
-        ba = b_array - a_array
+
+        # Apply height scaling to the axis
+        b_scaled = a_array + (b_array - a_array) * h
+        ba = b_scaled - a_array
         pa = p - a_array
-        
+
         baba = np.sum(ba * ba, axis=0)
         paba = np.sum(pa * ba, axis=0)
-        
+
         x = np.sqrt(np.sum((pa * baba - ba * paba.reshape(1, *paba.shape))**2, axis=0)) - r * baba
         y = np.abs(paba - baba * 0.5) - baba * 0.5
-        
+
         x2 = x * x
         y2 = y * y * baba
-        
-        d = np.where(np.maximum(x, y) < 0.0, 
-                     -np.minimum(x2, y2), 
+
+        d = np.where(np.maximum(x, y) < 0.0,
+                     -np.minimum(x2, y2),
                      np.where(x > 0.0, x2, 0.0) + np.where(y > 0.0, y2, 0.0))
-        
+
         return np.sign(d) * np.sqrt(np.abs(d)) / baba
     return SDF(_fn)
 

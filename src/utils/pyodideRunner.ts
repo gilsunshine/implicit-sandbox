@@ -112,7 +112,7 @@ function dedent(str: string): string {
   return lines.map((line) => line.slice(indent)).join("\n");
 }
 
-export const executePythonCode = async (userCode: string): Promise<Float32Array> => {
+export const executePythonCode = async (userCode: string, resolution: number): Promise<Float32Array> => {
   const pyodide = await initPyodide();
   await loadExecutionPackages();
   await initSDFLibrary(); // Ensure this happens once
@@ -120,9 +120,8 @@ export const executePythonCode = async (userCode: string): Promise<Float32Array>
   try {
     // Evaluate user code (which defines scalar_field)
     await pyodide.runPythonAsync(userCode);
-
     // Evaluate scalar_field over the grid
-    const evalScript = dedent(`def evaluate_in_chunks(resolution=256, chunk_size=64):
+    const evalScript = dedent(`def evaluate_in_chunks(resolution, chunk_size):
     grid = np.linspace(0, 1, resolution)
     full_values = np.zeros((resolution, resolution, resolution), dtype=np.float32)
 
@@ -143,8 +142,8 @@ export const executePythonCode = async (userCode: string): Promise<Float32Array>
                 full_values[x0:x1, y0:y1, z0:z1] = scalar_field(X, Y, Z).astype(np.float32)
 
     return full_values
-
-raw_data = evaluate_in_chunks(256, 64)
+resolution = ${resolution}
+raw_data = evaluate_in_chunks(resolution, int(resolution / 4))
 clipped = np.clip(raw_data, -1.0, 1.0).astype(np.float32)
 clipped = clipped.flatten()
 clipped

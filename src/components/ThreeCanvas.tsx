@@ -15,10 +15,9 @@ interface ThreeCanvasProps {
     u_renderMode: number;
     u_minValue: number;
     u_maxValue: number;
+    u_dim: number;
   };
 }
-
-const dim = 256;
 
 const ThreeCanvas = ({
   rawData,
@@ -44,11 +43,11 @@ const ThreeCanvas = ({
     }
     
     // Use either the provided rawData or fallback dummy data (so scene initializes)
-    if (rawData && rawData.length !== dim * dim * dim) {
+    if (rawData && rawData.length !== uniformsOverrides.u_dim * uniformsOverrides.u_dim * uniformsOverrides.u_dim) {
       console.warn("⚠️ rawData length mismatch", rawData.length);
     }
 
-    const initialData = rawData ? rawData : new Float32Array(dim * dim * dim).fill(128);
+    const initialData = rawData ? rawData : new Float32Array(uniformsOverrides.u_dim * uniformsOverrides.u_dim * uniformsOverrides.u_dim).fill(128);
     
     const width = canvasRef.current.clientWidth;
     const height = canvasRef.current.clientHeight;
@@ -73,7 +72,7 @@ const ThreeCanvas = ({
     controlsRef.current = controls;
     
     // Volume texture (store in a ref so it can be updated later)
-    const volumeDataTexture = new Three.Data3DTexture(initialData, dim, dim, dim);
+    const volumeDataTexture = new Three.Data3DTexture(initialData, uniformsOverrides.u_dim, uniformsOverrides.u_dim, uniformsOverrides.u_dim);
     volumeDataTexture.format = Three.RedFormat;
     volumeDataTexture.minFilter = Three.LinearFilter;
     volumeDataTexture.magFilter = Three.LinearFilter;
@@ -87,7 +86,7 @@ const ThreeCanvas = ({
     // Create uniforms object (store in ref)
     const uniforms = {
       u_camera: { value: camera.position },
-      u_resolution: { value: new Three.Vector3(width, height, 1) },
+      u_dim: { value: new Three.Vector3(width, height, 1) },
       u_dt: { value: uniformsOverrides.u_dt },
       u_time: { value: 0.0 },
       u_crossSectionSize: {
@@ -151,13 +150,13 @@ const ThreeCanvas = ({
   useEffect(() => {
     if (!rawData || !volumeTextureRef.current || !uniformsRef.current) return;
   
-    const expectedLength = dim * dim * dim;
+    const expectedLength = uniformsOverrides.u_dim * uniformsOverrides.u_dim * uniformsOverrides.u_dim;
     if (rawData.length !== expectedLength) {
       console.warn("rawData length mismatch", rawData.length, "expected", expectedLength);
       return;
     }
 
-    const newTexture = new Three.Data3DTexture(rawData, dim, dim, dim);
+    const newTexture = new Three.Data3DTexture(rawData, uniformsOverrides.u_dim, uniformsOverrides.u_dim, uniformsOverrides.u_dim);
     newTexture.format = Three.RedFormat;
     newTexture.type = Three.FloatType;
     newTexture.internalFormat = 'R32F';
@@ -195,9 +194,9 @@ const ThreeCanvas = ({
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
   
-      if (uniformsRef.current) {
-        uniformsRef.current.u_resolution.value.set(width, height, 1);
-      }
+      // if (uniformsRef.current) {
+      //   uniformsRef.current.u_resolution.value.set(width, height, 1);
+      // }
   
       renderer.render(scene, camera);
     });

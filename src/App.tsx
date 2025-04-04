@@ -45,6 +45,10 @@ shape = smooth_intersection(sphere, tpms, 0.2)
 # Play with built in operations like twisting
 shape = op_twist(shape, k=4)
 
+# Write your own functions
+def my_sphere(size, x, y, z, xOff, yOff, zOff):
+  return np.exp(-size * ((x-xOff)**2 + (y-yOff)**2 + (z-zOff)**2))
+
 # Must have final scalar field returned from scalar_field function.
 def scalar_field(x, y, z):
     # Try return shape(x, y, z) instead
@@ -61,6 +65,8 @@ const App = () => {
   const [renderMode, setRenderMode] = useState<"surface" | "volume">("volume");
   // const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
   const [editorWidth, setEditorWidth] = useState(0);
+  const [u_dim, setUDim] = useState(128); // default low
+
 
   // Create a ref for the CodeEditor
   const editorRef = useRef<CodeEditorHandle>(null);
@@ -89,7 +95,7 @@ const App = () => {
       if (editorRef.current) {
         const code = editorRef.current.getCode();
         try {
-          const result = await executePythonCode(code);
+          const result = await executePythonCode(code, u_dim);
           console.log("Generated data:", result.length);
 
           setRawData(result);
@@ -140,6 +146,16 @@ const App = () => {
     return () => window.removeEventListener("resize", onWindowResize);
   }, []);
 
+  useEffect(() => {
+    if (u_dim > 0) {
+      const timeout = setTimeout(() => {
+        handleRunCode(); 
+      }, 150); 
+  
+      return () => clearTimeout(timeout);
+    }
+  }, [u_dim]);
+
 
   // When "Run Code" is pressed, get the current code from the editor and evaluate it
   const handleRunCode = useCallback(async () => {
@@ -171,7 +187,7 @@ const App = () => {
       };
   
       try {
-        const result = await executePythonCode(code);
+        const result = await executePythonCode(code, u_dim);
         console.log("Generated data:", result.length);
         setRawData(result);
 
@@ -194,9 +210,7 @@ const App = () => {
   
       setLoading(false);
     }
-  }, []);
-
-  const dim = 256; // Resolution
+  }, [u_dim]);
 
   const handleSaveMesh = useCallback(() => {
     if (!rawData) {
@@ -210,7 +224,7 @@ const App = () => {
     }
     
     // Then pass it in:
-    const fullGeometry: THREE.BufferGeometry = generateMeshFromScalarField(rawData, dim, 1, u_isoValue);
+    const fullGeometry: THREE.BufferGeometry = generateMeshFromScalarField(rawData, u_dim, 1, u_isoValue * 255);
   
     const triangleCount = fullGeometry.index
       ? fullGeometry.index.count / 3
@@ -260,7 +274,8 @@ const App = () => {
     u_crossSectionSize, 
     u_renderMode: renderMode === "volume" ? 1.0 : 0.0,
     u_minValue,
-    u_maxValue
+    u_maxValue,
+    u_dim
   };
 
   return (
@@ -330,6 +345,9 @@ const App = () => {
               setUCrossSectionSize={setUCrossSectionSize}
               renderMode={renderMode}
               setRenderMode={setRenderMode}
+              u_dim={u_dim}
+              setUDim={setUDim}
+              handleRunCode={handleRunCode}
               handleSaveMesh={handleSaveMesh}
               onClose={() => setShowControls(false)}
             />
