@@ -29,6 +29,7 @@ export const initSDFLibrary = async () => {
   if (sdfLibraryLoaded) return;
 
   const pyodide = await initPyodide();
+  await pyodide.loadPackage(["numpy"]);
   await loadExecutionPackages();
 
   await pyodide.runPythonAsync(dedent(sdfLibrary));

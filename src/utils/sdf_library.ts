@@ -1,6 +1,7 @@
 export const sdfLibrary = 
 
-`class SDF:
+`
+class SDF:
     def __init__(self, fn):
         self.fn = fn
 
